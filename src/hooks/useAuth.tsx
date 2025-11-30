@@ -1,0 +1,180 @@
+import { useState, useEffect } from "react";
+import { User, Session } from "@supabase/supabase-js";
+import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
+import { useToast } from "@/hooks/use-toast";
+
+export type UserRole = "candidate" | "company";
+
+export const useAuth = () => {
+  const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [userRole, setUserRole] = useState<UserRole | null>(null);
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
+  useEffect(() => {
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        setSession(session);
+        setUser(session?.user ?? null);
+        
+        if (session?.user) {
+          setTimeout(() => {
+            fetchUserRole(session.user.id);
+          }, 0);
+        } else {
+          setUserRole(null);
+        }
+      }
+    );
+
+    // Check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      
+      if (session?.user) {
+        fetchUserRole(session.user.id);
+      }
+      setLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const fetchUserRole = async (userId: string) => {
+    const { data, error } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userId)
+      .single();
+
+    if (data && !error) {
+      setUserRole(data.role as UserRole);
+    }
+  };
+
+  const signUp = async (email: string, password: string, role: UserRole, profileData: any) => {
+    const redirectUrl = `${window.location.origin}/`;
+    
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: redirectUrl,
+      },
+    });
+
+    if (error) {
+      toast({
+        title: "Erro ao criar conta",
+        description: error.message,
+        variant: "destructive",
+      });
+      return { error };
+    }
+
+    if (data.user) {
+      // Create profile based on role
+      if (role === "candidate") {
+        const { error: profileError } = await supabase
+          .from("candidate_profiles")
+          .insert({
+            user_id: data.user.id,
+            full_name: profileData.full_name,
+            phone: profileData.phone,
+          });
+
+        if (profileError) {
+          toast({
+            title: "Erro ao criar perfil",
+            description: profileError.message,
+            variant: "destructive",
+          });
+          return { error: profileError };
+        }
+      } else if (role === "company") {
+        const { error: companyError } = await supabase
+          .from("companies")
+          .insert({
+            user_id: data.user.id,
+            name: profileData.name,
+            location: profileData.location,
+          });
+
+        if (companyError) {
+          toast({
+            title: "Erro ao criar empresa",
+            description: companyError.message,
+            variant: "destructive",
+          });
+          return { error: companyError };
+        }
+      }
+
+      toast({
+        title: "Conta criada com sucesso!",
+        description: "Você já pode fazer login.",
+      });
+    }
+
+    return { data, error: null };
+  };
+
+  const signIn = async (email: string, password: string) => {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) {
+      toast({
+        title: "Erro ao fazer login",
+        description: error.message,
+        variant: "destructive",
+      });
+      return { error };
+    }
+
+    toast({
+      title: "Login realizado!",
+      description: "Bem-vindo de volta.",
+    });
+
+    navigate("/");
+    return { data, error: null };
+  };
+
+  const signOut = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      toast({
+        title: "Erro ao sair",
+        description: error.message,
+        variant: "destructive",
+      });
+      return { error };
+    }
+
+    toast({
+      title: "Logout realizado",
+      description: "Até logo!",
+    });
+
+    navigate("/");
+    return { error: null };
+  };
+
+  return {
+    user,
+    session,
+    loading,
+    userRole,
+    signUp,
+    signIn,
+    signOut,
+  };
+};

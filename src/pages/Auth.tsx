@@ -1,174 +1,191 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { Header } from "@/components/Header";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
-import { z } from "zod";
-
-const authSchema = z.object({
-  email: z.string().email("Email inválido"),
-  password: z.string().min(6, "Senha deve ter no mínimo 6 caracteres")
-});
+import { Briefcase, User } from "lucide-react";
+import { useAuth, UserRole } from "@/hooks/useAuth";
+import { useNavigate } from "react-router-dom";
+import { useEffect } from "react";
 
 const Auth = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const { toast } = useToast();
+  const [isLogin, setIsLogin] = useState(true);
+  const [role, setRole] = useState<UserRole>("candidate");
+  const { signUp, signIn, user, loading } = useAuth();
   const navigate = useNavigate();
 
-  const handleSignUp = async (e: React.FormEvent) => {
+  // Redirect if already logged in
+  useEffect(() => {
+    if (!loading && user) {
+      navigate("/");
+    }
+  }, [user, loading, navigate]);
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    
-    try {
-      authSchema.parse({ email, password });
-      setLoading(true);
+    const formData = new FormData(e.currentTarget);
+    const email = formData.get("email") as string;
+    const password = formData.get("password") as string;
 
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/`
-        }
-      });
+    if (isLogin) {
+      await signIn(email, password);
+    } else {
+      const profileData = role === "candidate" 
+        ? {
+            full_name: formData.get("full_name") as string,
+            phone: formData.get("phone") as string,
+          }
+        : {
+            name: formData.get("company_name") as string,
+            location: formData.get("location") as string,
+          };
 
-      if (error) throw error;
-
-      toast({
-        title: "Cadastro realizado!",
-        description: "Você já pode fazer login"
-      });
-    } catch (error: any) {
-      toast({
-        title: "Erro no cadastro",
-        description: error.message || "Verifique os dados e tente novamente",
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
+      await signUp(email, password, role, profileData);
     }
   };
 
-  const handleSignIn = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    try {
-      authSchema.parse({ email, password });
-      setLoading(true);
-
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      });
-
-      if (error) throw error;
-
-      toast({
-        title: "Login realizado!",
-        description: "Redirecionando..."
-      });
-      
-      navigate("/vagas");
-    } catch (error: any) {
-      toast({
-        title: "Erro no login",
-        description: error.message || "Email ou senha incorretos",
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <div className="container mx-auto px-4 py-16 flex items-center justify-center">
+          <p className="text-muted-foreground">Carregando...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
       <Header />
       
-      <div className="container px-4 py-12">
+      <main className="container mx-auto px-4 py-16">
         <div className="max-w-md mx-auto">
-          <Card className="p-6">
-            <h1 className="text-2xl font-bold text-center mb-6">
-              Bem-vindo ao Bahia Vagas
-            </h1>
+          <Card>
+            <CardHeader className="text-center">
+              <CardTitle className="text-2xl">
+                {isLogin ? "Entrar" : "Criar Conta"}
+              </CardTitle>
+              <CardDescription>
+                {isLogin 
+                  ? "Entre com suas credenciais" 
+                  : "Preencha os dados para começar"}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {!isLogin && (
+                <Tabs value={role} onValueChange={(v) => setRole(v as UserRole)} className="mb-6">
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="candidate" className="gap-2">
+                      <User className="h-4 w-4" />
+                      Candidato
+                    </TabsTrigger>
+                    <TabsTrigger value="company" className="gap-2">
+                      <Briefcase className="h-4 w-4" />
+                      Empresa
+                    </TabsTrigger>
+                  </TabsList>
+                </Tabs>
+              )}
 
-            <Tabs defaultValue="login" className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="login">Entrar</TabsTrigger>
-                <TabsTrigger value="signup">Cadastrar</TabsTrigger>
-              </TabsList>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                {!isLogin && (
+                  <>
+                    {role === "candidate" ? (
+                      <>
+                        <div className="space-y-2">
+                          <Label htmlFor="full_name">Nome Completo</Label>
+                          <Input
+                            id="full_name"
+                            name="full_name"
+                            type="text"
+                            required
+                            placeholder="Seu nome"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="phone">Telefone</Label>
+                          <Input
+                            id="phone"
+                            name="phone"
+                            type="tel"
+                            required
+                            placeholder="(XX) XXXXX-XXXX"
+                          />
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="space-y-2">
+                          <Label htmlFor="company_name">Nome da Empresa</Label>
+                          <Input
+                            id="company_name"
+                            name="company_name"
+                            type="text"
+                            required
+                            placeholder="Nome da empresa"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="location">Localização</Label>
+                          <Input
+                            id="location"
+                            name="location"
+                            type="text"
+                            required
+                            placeholder="Cidade, Estado"
+                          />
+                        </div>
+                      </>
+                    )}
+                  </>
+                )}
 
-              <TabsContent value="login">
-                <form onSubmit={handleSignIn} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="login-email">Email</Label>
-                    <Input
-                      id="login-email"
-                      type="email"
-                      placeholder="seu@email.com"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      required
-                    />
-                  </div>
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    name="email"
+                    type="email"
+                    required
+                    placeholder="seu@email.com"
+                  />
+                </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="login-password">Senha</Label>
-                    <Input
-                      id="login-password"
-                      type="password"
-                      placeholder="••••••"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      required
-                    />
-                  </div>
+                <div className="space-y-2">
+                  <Label htmlFor="password">Senha</Label>
+                  <Input
+                    id="password"
+                    name="password"
+                    type="password"
+                    required
+                    placeholder="••••••••"
+                    minLength={6}
+                  />
+                </div>
 
-                  <Button type="submit" className="w-full" disabled={loading}>
-                    {loading ? "Entrando..." : "Entrar"}
-                  </Button>
-                </form>
-              </TabsContent>
+                <Button type="submit" className="w-full">
+                  {isLogin ? "Entrar" : "Criar Conta"}
+                </Button>
+              </form>
 
-              <TabsContent value="signup">
-                <form onSubmit={handleSignUp} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-email">Email</Label>
-                    <Input
-                      id="signup-email"
-                      type="email"
-                      placeholder="seu@email.com"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      required
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-password">Senha</Label>
-                    <Input
-                      id="signup-password"
-                      type="password"
-                      placeholder="••••••"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      required
-                    />
-                  </div>
-
-                  <Button type="submit" className="w-full" disabled={loading}>
-                    {loading ? "Cadastrando..." : "Criar Conta"}
-                  </Button>
-                </form>
-              </TabsContent>
-            </Tabs>
+              <div className="mt-4 text-center text-sm">
+                <button
+                  type="button"
+                  onClick={() => setIsLogin(!isLogin)}
+                  className="text-primary hover:underline"
+                >
+                  {isLogin 
+                    ? "Não tem conta? Cadastre-se" 
+                    : "Já tem conta? Faça login"}
+                </button>
+              </div>
+            </CardContent>
           </Card>
         </div>
-      </div>
+      </main>
     </div>
   );
 };
