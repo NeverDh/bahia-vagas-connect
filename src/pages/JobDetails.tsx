@@ -6,10 +6,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { MapPin, Briefcase, DollarSign, Clock, Building2, ExternalLink } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
+import { useAuth } from "@/hooks/useAuth";
+import { ApplicationForm } from "@/components/ApplicationForm";
 
 const contractTypeLabels: Record<string, string> = {
   clt: "CLT",
@@ -54,7 +57,10 @@ const JobDetails = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [job, setJob] = useState<Job | null>(null);
+  const [candidateProfile, setCandidateProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const { user, userRole } = useAuth();
 
   useEffect(() => {
     const fetchJob = async () => {
@@ -96,7 +102,25 @@ const JobDetails = () => {
     };
 
     fetchJob();
-  }, [id, navigate]);
+    
+    if (user && userRole === "candidate") {
+      fetchCandidateProfile();
+    }
+  }, [id, navigate, user, userRole]);
+
+  const fetchCandidateProfile = async () => {
+    if (!user) return;
+    
+    const { data, error } = await supabase
+      .from("candidate_profiles")
+      .select("*")
+      .eq("user_id", user.id)
+      .single();
+
+    if (data && !error) {
+      setCandidateProfile(data);
+    }
+  };
 
   const formatSalary = () => {
     if (!job?.salary_min && !job?.salary_max) return "A combinar";
@@ -244,15 +268,51 @@ const JobDetails = () => {
               <Separator />
 
               <div className="flex gap-4">
-                <Button 
-                  size="lg" 
-                  className="flex-1"
-                  onClick={() => {
-                    toast.info("Sistema de candidatura em desenvolvimento");
-                  }}
-                >
-                  Candidatar-se
-                </Button>
+                <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button 
+                      size="lg" 
+                      className="flex-1"
+                      onClick={() => {
+                        if (!user) {
+                          toast.error("Login necessário", {
+                            description: "Você precisa fazer login como candidato para se candidatar"
+                          });
+                          navigate("/auth");
+                          return;
+                        }
+
+                        if (userRole !== "candidate") {
+                          toast.error("Apenas candidatos", {
+                            description: "Apenas candidatos podem se candidatar às vagas"
+                          });
+                          return;
+                        }
+
+                        setIsDialogOpen(true);
+                      }}
+                    >
+                      Candidatar-se
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                    <DialogHeader>
+                      <DialogTitle>Candidatar-se para {job.title}</DialogTitle>
+                      <DialogDescription>
+                        Preencha o formulário abaixo para enviar sua candidatura
+                      </DialogDescription>
+                    </DialogHeader>
+                    {candidateProfile && (
+                      <ApplicationForm
+                        jobId={id!}
+                        candidateId={candidateProfile.id}
+                        onSuccess={() => {
+                          setIsDialogOpen(false);
+                        }}
+                      />
+                    )}
+                  </DialogContent>
+                </Dialog>
                 <Button 
                   size="lg" 
                   variant="outline"
