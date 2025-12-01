@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Header } from "@/components/Header";
 import { JobCard } from "@/components/JobCard";
 import { JobFilters } from "@/components/JobFilters";
+import { Pagination } from "@/components/Pagination";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -10,9 +11,12 @@ import { useAuth } from "@/hooks/useAuth";
 
 const Jobs = () => {
   const [jobs, setJobs] = useState<any[]>([]);
+  const [totalJobs, setTotalJobs] = useState(0);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [appliedJobIds, setAppliedJobIds] = useState<Set<string>>(new Set());
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
   const { toast } = useToast();
   const { user, userRole } = useAuth();
   
@@ -23,16 +27,53 @@ const Jobs = () => {
   });
 
   useEffect(() => {
+    setCurrentPage(1);
+  }, [filters, searchTerm]);
+
+  useEffect(() => {
     fetchJobs();
     if (user && userRole === "candidate") {
       fetchAppliedJobs();
     }
-  }, [filters, searchTerm, user, userRole]);
+  }, [filters, searchTerm, user, userRole, currentPage, itemsPerPage]);
 
   const fetchJobs = async () => {
     try {
       setLoading(true);
-      let query = supabase
+      
+      // Build base query for counting
+      let countQuery = supabase
+        .from("jobs")
+        .select("*", { count: "exact", head: true })
+        .eq("status", "active");
+
+      if (searchTerm) {
+        countQuery = countQuery.or(`title.ilike.%${searchTerm}%,category.ilike.%${searchTerm}%`);
+      }
+
+      if (filters.remoteOnly) {
+        countQuery = countQuery.eq("remote_option", true);
+      }
+
+      if (filters.contractTypes.length > 0) {
+        countQuery = countQuery.in("contract_type", filters.contractTypes as any);
+      }
+
+      if (filters.experienceLevels.length > 0) {
+        countQuery = countQuery.in("experience_level", filters.experienceLevels as any);
+      }
+
+      // Get total count
+      const { count, error: countError } = await countQuery;
+      
+      if (countError) throw countError;
+      setTotalJobs(count || 0);
+
+      // Build data query with pagination
+      const from = (currentPage - 1) * itemsPerPage;
+      const to = from + itemsPerPage - 1;
+
+      let dataQuery = supabase
         .from("jobs")
         .select(`
           *,
@@ -42,25 +83,26 @@ const Jobs = () => {
           )
         `)
         .eq("status", "active")
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: false })
+        .range(from, to);
 
       if (searchTerm) {
-        query = query.or(`title.ilike.%${searchTerm}%,category.ilike.%${searchTerm}%`);
+        dataQuery = dataQuery.or(`title.ilike.%${searchTerm}%,category.ilike.%${searchTerm}%`);
       }
 
       if (filters.remoteOnly) {
-        query = query.eq("remote_option", true);
+        dataQuery = dataQuery.eq("remote_option", true);
       }
 
       if (filters.contractTypes.length > 0) {
-        query = query.in("contract_type", filters.contractTypes as any);
+        dataQuery = dataQuery.in("contract_type", filters.contractTypes as any);
       }
 
       if (filters.experienceLevels.length > 0) {
-        query = query.in("experience_level", filters.experienceLevels as any);
+        dataQuery = dataQuery.in("experience_level", filters.experienceLevels as any);
       }
 
-      const { data, error } = await query;
+      const { data, error } = await dataQuery;
 
       if (error) throw error;
       setJobs(data || []);
@@ -130,15 +172,24 @@ const Jobs = () => {
                 <p className="text-muted-foreground">Nenhuma vaga encontrada</p>
               </div>
             ) : (
-              <div className="space-y-4">
-                {jobs.map((job) => (
-                  <JobCard 
-                    key={job.id} 
-                    job={job} 
-                    hasApplied={appliedJobIds.has(job.id)}
-                  />
-                ))}
-              </div>
+              <>
+                <div className="space-y-4">
+                  {jobs.map((job) => (
+                    <JobCard 
+                      key={job.id} 
+                      job={job} 
+                      hasApplied={appliedJobIds.has(job.id)}
+                    />
+                  ))}
+                </div>
+                <Pagination
+                  currentPage={currentPage}
+                  totalItems={totalJobs}
+                  itemsPerPage={itemsPerPage}
+                  onPageChange={setCurrentPage}
+                  onItemsPerPageChange={setItemsPerPage}
+                />
+              </>
             )}
           </div>
         </div>
