@@ -25,6 +25,11 @@ export const Header = () => {
           </Link>
           {user ? (
             <>
+              {userRole === "candidate" && (
+                <Link to="/perfil">
+                  <Button variant="ghost">Meu Perfil</Button>
+                </Link>
+              )}
               <span className="text-sm text-muted-foreground hidden md:inline">
                 {userRole === "candidate" ? "Candidato" : "Empresa"}
               </span>
