@@ -60,6 +60,8 @@ const JobDetails = () => {
   const [candidateProfile, setCandidateProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [hasApplied, setHasApplied] = useState(false);
+  const [checkingApplication, setCheckingApplication] = useState(true);
   const { user, userRole } = useAuth();
 
   useEffect(() => {
@@ -105,6 +107,9 @@ const JobDetails = () => {
     
     if (user && userRole === "candidate") {
       fetchCandidateProfile();
+      checkIfAlreadyApplied();
+    } else {
+      setCheckingApplication(false);
     }
   }, [id, navigate, user, userRole]);
 
@@ -120,6 +125,37 @@ const JobDetails = () => {
     if (data && !error) {
       setCandidateProfile(data);
     }
+  };
+
+  const checkIfAlreadyApplied = async () => {
+    if (!user || !id) {
+      setCheckingApplication(false);
+      return;
+    }
+    
+    const { data: profileData } = await supabase
+      .from("candidate_profiles")
+      .select("id")
+      .eq("user_id", user.id)
+      .single();
+
+    if (!profileData) {
+      setCheckingApplication(false);
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from("applications")
+      .select("id")
+      .eq("candidate_id", profileData.id)
+      .eq("job_id", id)
+      .maybeSingle();
+
+    if (!error && data) {
+      setHasApplied(true);
+    }
+    
+    setCheckingApplication(false);
   };
 
   const formatSalary = () => {
@@ -268,33 +304,49 @@ const JobDetails = () => {
               <Separator />
 
               <div className="flex gap-4">
-                <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                  <DialogTrigger asChild>
+                {hasApplied ? (
+                  <div className="flex-1">
                     <Button 
                       size="lg" 
-                      className="flex-1"
-                      onClick={() => {
-                        if (!user) {
-                          toast.error("Login necessário", {
-                            description: "Você precisa fazer login como candidato para se candidatar"
-                          });
-                          navigate("/auth");
-                          return;
-                        }
-
-                        if (userRole !== "candidate") {
-                          toast.error("Apenas candidatos", {
-                            description: "Apenas candidatos podem se candidatar às vagas"
-                          });
-                          return;
-                        }
-
-                        setIsDialogOpen(true);
-                      }}
+                      className="w-full"
+                      disabled
+                      variant="secondary"
                     >
-                      Candidatar-se
+                      Você já se candidatou a esta vaga
                     </Button>
-                  </DialogTrigger>
+                    <p className="text-xs text-muted-foreground mt-2 text-center">
+                      Acompanhe o status no seu perfil
+                    </p>
+                  </div>
+                ) : (
+                  <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                    <DialogTrigger asChild>
+                      <Button 
+                        size="lg" 
+                        className="flex-1"
+                        disabled={checkingApplication}
+                        onClick={() => {
+                          if (!user) {
+                            toast.error("Login necessário", {
+                              description: "Você precisa fazer login como candidato para se candidatar"
+                            });
+                            navigate("/auth");
+                            return;
+                          }
+
+                          if (userRole !== "candidate") {
+                            toast.error("Apenas candidatos", {
+                              description: "Apenas candidatos podem se candidatar às vagas"
+                            });
+                            return;
+                          }
+
+                          setIsDialogOpen(true);
+                        }}
+                      >
+                        Candidatar-se
+                      </Button>
+                    </DialogTrigger>
                   <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
                       <DialogTitle>Candidatar-se para {job.title}</DialogTitle>
@@ -308,11 +360,14 @@ const JobDetails = () => {
                         candidateId={candidateProfile.id}
                         onSuccess={() => {
                           setIsDialogOpen(false);
+                          setHasApplied(true);
+                          toast.success("Candidatura enviada com sucesso!");
                         }}
                       />
                     )}
                   </DialogContent>
                 </Dialog>
+                )}
                 <Button 
                   size="lg" 
                   variant="outline"
