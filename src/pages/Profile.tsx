@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Header } from "@/components/Header";
+import { Pagination } from "@/components/Pagination";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -53,9 +54,12 @@ const Profile = () => {
   const { user, userRole, loading: authLoading } = useAuth();
   const [profile, setProfile] = useState<CandidateProfile | null>(null);
   const [applications, setApplications] = useState<Application[]>([]);
+  const [totalApplications, setTotalApplications] = useState(0);
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [editedProfile, setEditedProfile] = useState<Partial<CandidateProfile>>({});
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(5);
 
   useEffect(() => {
     if (authLoading) return;
@@ -77,6 +81,12 @@ const Profile = () => {
       fetchApplications();
     }
   }, [user, userRole, authLoading, navigate]);
+
+  useEffect(() => {
+    if (user && userRole === "candidate") {
+      fetchApplications();
+    }
+  }, [currentPage, itemsPerPage, user, userRole]);
 
   const fetchProfile = async () => {
     if (!user) return;
@@ -109,6 +119,24 @@ const Profile = () => {
 
     if (!profileData) return;
 
+    // Get total count
+    const { count, error: countError } = await supabase
+      .from("applications")
+      .select("*", { count: "exact", head: true })
+      .eq("candidate_id", profileData.id);
+
+    if (countError) {
+      toast.error("Erro ao carregar candidaturas");
+      console.error(countError);
+      return;
+    }
+
+    setTotalApplications(count || 0);
+
+    // Get paginated data
+    const from = (currentPage - 1) * itemsPerPage;
+    const to = from + itemsPerPage - 1;
+
     const { data, error } = await supabase
       .from("applications")
       .select(`
@@ -127,7 +155,8 @@ const Profile = () => {
         )
       `)
       .eq("candidate_id", profileData.id)
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false })
+      .range(from, to);
 
     if (error) {
       toast.error("Erro ao carregar candidaturas");
@@ -302,9 +331,9 @@ const Profile = () => {
             <CardHeader>
               <CardTitle>Minhas Candidaturas</CardTitle>
               <CardDescription>
-                {applications.length === 0
+                {totalApplications === 0
                   ? "Você ainda não se candidatou a nenhuma vaga"
-                  : `${applications.length} candidatura${applications.length > 1 ? "s" : ""}`}
+                  : `${totalApplications} candidatura${totalApplications > 1 ? "s" : ""}`}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -316,61 +345,70 @@ const Profile = () => {
                   </Button>
                 </div>
               ) : (
-                <div className="space-y-4">
-                  {applications.map((application) => (
-                    <div key={application.id}>
-                      <div
-                        className="flex items-start gap-4 p-4 rounded-lg border border-border hover:border-primary/50 transition-colors cursor-pointer"
-                        onClick={() => navigate(`/vaga/${application.jobs?.id}`)}
-                      >
-                        {application.jobs?.companies?.logo_url && (
-                          <img
-                            src={application.jobs.companies.logo_url}
-                            alt={application.jobs.companies.name}
-                            className="w-12 h-12 rounded object-cover"
-                          />
-                        )}
-                        
-                        <div className="flex-1 min-w-0">
-                          <h3 className="font-semibold text-foreground mb-1">
-                            {application.jobs?.title || "Vaga não encontrada"}
-                          </h3>
-                          <div className="flex items-center gap-3 text-sm text-muted-foreground mb-2">
-                            <span className="flex items-center gap-1">
-                              <Building2 className="h-3 w-3" />
-                              {application.jobs?.companies?.name || "Empresa"}
-                            </span>
-                            <span className="flex items-center gap-1">
-                              <MapPin className="h-3 w-3" />
-                              {application.jobs?.location || "Localização"}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Badge
-                              variant={
-                                application.status === "accepted"
-                                  ? "default"
-                                  : application.status === "rejected"
-                                  ? "destructive"
-                                  : "secondary"
-                              }
-                            >
-                              {statusLabels[application.status] || application.status}
-                            </Badge>
-                            <span className="text-xs text-muted-foreground flex items-center gap-1">
-                              <Clock className="h-3 w-3" />
-                              {formatDistanceToNow(new Date(application.created_at), {
-                                addSuffix: true,
-                                locale: ptBR,
-                              })}
-                            </span>
+                <>
+                  <div className="space-y-4">
+                    {applications.map((application) => (
+                      <div key={application.id}>
+                        <div
+                          className="flex items-start gap-4 p-4 rounded-lg border border-border hover:border-primary/50 transition-colors cursor-pointer"
+                          onClick={() => navigate(`/vaga/${application.jobs?.id}`)}
+                        >
+                          {application.jobs?.companies?.logo_url && (
+                            <img
+                              src={application.jobs.companies.logo_url}
+                              alt={application.jobs.companies.name}
+                              className="w-12 h-12 rounded object-cover"
+                            />
+                          )}
+                          
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-semibold text-foreground mb-1">
+                              {application.jobs?.title || "Vaga não encontrada"}
+                            </h3>
+                            <div className="flex items-center gap-3 text-sm text-muted-foreground mb-2">
+                              <span className="flex items-center gap-1">
+                                <Building2 className="h-3 w-3" />
+                                {application.jobs?.companies?.name || "Empresa"}
+                              </span>
+                              <span className="flex items-center gap-1">
+                                <MapPin className="h-3 w-3" />
+                                {application.jobs?.location || "Localização"}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Badge
+                                variant={
+                                  application.status === "accepted"
+                                    ? "default"
+                                    : application.status === "rejected"
+                                    ? "destructive"
+                                    : "secondary"
+                                }
+                              >
+                                {statusLabels[application.status] || application.status}
+                              </Badge>
+                              <span className="text-xs text-muted-foreground flex items-center gap-1">
+                                <Clock className="h-3 w-3" />
+                                {formatDistanceToNow(new Date(application.created_at), {
+                                  addSuffix: true,
+                                  locale: ptBR,
+                                })}
+                              </span>
+                            </div>
                           </div>
                         </div>
+                        <Separator className="mt-4" />
                       </div>
-                      <Separator className="mt-4" />
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                  <Pagination
+                    currentPage={currentPage}
+                    totalItems={totalApplications}
+                    itemsPerPage={itemsPerPage}
+                    onPageChange={setCurrentPage}
+                    onItemsPerPageChange={setItemsPerPage}
+                  />
+                </>
               )}
             </CardContent>
           </Card>
