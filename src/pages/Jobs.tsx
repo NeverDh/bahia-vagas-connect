@@ -6,12 +6,15 @@ import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 
 const Jobs = () => {
   const [jobs, setJobs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [appliedJobIds, setAppliedJobIds] = useState<Set<string>>(new Set());
   const { toast } = useToast();
+  const { user, userRole } = useAuth();
   
   const [filters, setFilters] = useState({
     contractTypes: [] as string[],
@@ -21,7 +24,10 @@ const Jobs = () => {
 
   useEffect(() => {
     fetchJobs();
-  }, [filters, searchTerm]);
+    if (user && userRole === "candidate") {
+      fetchAppliedJobs();
+    }
+  }, [filters, searchTerm, user, userRole]);
 
   const fetchJobs = async () => {
     try {
@@ -69,6 +75,28 @@ const Jobs = () => {
     }
   };
 
+  const fetchAppliedJobs = async () => {
+    if (!user) return;
+
+    const { data: profileData } = await supabase
+      .from("candidate_profiles")
+      .select("id")
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    if (!profileData) return;
+
+    const { data: applications } = await supabase
+      .from("applications")
+      .select("job_id")
+      .eq("candidate_id", profileData.id);
+
+    if (applications) {
+      const jobIds = new Set(applications.map(app => app.job_id));
+      setAppliedJobIds(jobIds);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -104,7 +132,11 @@ const Jobs = () => {
             ) : (
               <div className="space-y-4">
                 {jobs.map((job) => (
-                  <JobCard key={job.id} job={job} />
+                  <JobCard 
+                    key={job.id} 
+                    job={job} 
+                    hasApplied={appliedJobIds.has(job.id)}
+                  />
                 ))}
               </div>
             )}
