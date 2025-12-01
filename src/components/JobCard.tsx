@@ -1,6 +1,6 @@
 import { Card } from "./ui/card";
 import { Badge } from "./ui/badge";
-import { MapPin, Briefcase, DollarSign, Clock } from "lucide-react";
+import { MapPin, Briefcase, DollarSign, Clock, CheckCircle2 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Link } from "react-router-dom";
@@ -22,6 +22,7 @@ interface JobCardProps {
       logo_url?: string;
     };
   };
+  hasApplied?: boolean;
 }
 
 const contractTypeLabels: Record<string, string> = {
@@ -40,7 +41,7 @@ const experienceLevelLabels: Record<string, string> = {
   specialist: "Especialista"
 };
 
-export const JobCard = ({ job }: JobCardProps) => {
+export const JobCard = ({ job, hasApplied = false }: JobCardProps) => {
   const formatSalary = () => {
     if (!job.salary_min && !job.salary_max) return "A combinar";
     if (job.salary_min && job.salary_max) {
@@ -62,11 +63,19 @@ export const JobCard = ({ job }: JobCardProps) => {
           )}
           
           <div className="flex-1 space-y-3">
-            <div>
-              <h3 className="font-semibold text-lg text-foreground hover:text-primary transition-colors">
-                {job.title}
-              </h3>
-              <p className="text-sm text-muted-foreground">{job.companies?.name}</p>
+            <div className="flex items-start justify-between gap-2">
+              <div>
+                <h3 className="font-semibold text-lg text-foreground hover:text-primary transition-colors">
+                  {job.title}
+                </h3>
+                <p className="text-sm text-muted-foreground">{job.companies?.name}</p>
+              </div>
+              {hasApplied && (
+                <Badge variant="default" className="gap-1 bg-primary text-primary-foreground">
+                  <CheckCircle2 className="h-3 w-3" />
+                  Candidatado
+                </Badge>
+              )}
             </div>
 
             <div className="flex flex-wrap gap-2">

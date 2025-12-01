@@ -58,19 +58,21 @@ const Profile = () => {
   const [editedProfile, setEditedProfile] = useState<Partial<CandidateProfile>>({});
 
   useEffect(() => {
-    if (!authLoading) {
-      if (!user) {
-        toast.error("Você precisa fazer login");
-        navigate("/auth");
-        return;
-      }
+    if (authLoading) return;
 
-      if (userRole !== "candidate") {
-        toast.error("Esta página é apenas para candidatos");
-        navigate("/");
-        return;
-      }
+    if (!user) {
+      toast.error("Você precisa fazer login");
+      navigate("/auth");
+      return;
+    }
 
+    if (userRole && userRole !== "candidate") {
+      toast.error("Esta página é apenas para candidatos");
+      navigate("/");
+      return;
+    }
+
+    if (userRole === "candidate") {
       fetchProfile();
       fetchApplications();
     }
