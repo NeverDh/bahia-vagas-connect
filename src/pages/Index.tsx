@@ -1,4 +1,4 @@
-import { Header } from "@/components/Header";
+import { MainLayout } from "@/components/MainLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, Briefcase, Users, TrendingUp, MapPin } from "lucide-react";
@@ -6,8 +6,7 @@ import { Link } from "react-router-dom";
 
 const Index = () => {
   return (
-    <div className="min-h-screen bg-background">
-      <Header />
+    <MainLayout>
       
       {/* Hero Section */}
       <section className="relative overflow-hidden bg-gradient-to-br from-primary/5 via-background to-accent/5">
@@ -123,7 +122,10 @@ const Index = () => {
           </div>
         </div>
       </section>
-    </div>
+      
+      {/* Spacer for mobile ad banner */}
+      <div className="h-24 xl:hidden" />
+    </MainLayout>
   );
 };
 

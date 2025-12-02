@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Header } from "@/components/Header";
+import { MainLayout } from "@/components/MainLayout";
 import { JobCard } from "@/components/JobCard";
 import { JobFilters } from "@/components/JobFilters";
 import { Pagination } from "@/components/Pagination";
@@ -140,10 +140,8 @@ const Jobs = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <Header />
-      
-      <div className="container px-4 py-8">
+    <MainLayout>
+      <div className="px-4 py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-4">Vagas Disponíveis</h1>
           <div className="relative max-w-2xl">
@@ -190,11 +188,14 @@ const Jobs = () => {
                   onItemsPerPageChange={setItemsPerPage}
                 />
               </>
-            )}
+              )}
           </div>
         </div>
+        
+        {/* Spacer for mobile ad banner */}
+        <div className="h-24 xl:hidden" />
       </div>
-    </div>
+    </MainLayout>
   );
 };
 

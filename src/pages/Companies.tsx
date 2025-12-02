@@ -1,4 +1,4 @@
-import { Header } from "@/components/Header";
+import { MainLayout } from "@/components/MainLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Building2, Users, TrendingUp, Briefcase } from "lucide-react";
@@ -6,10 +6,8 @@ import { Link } from "react-router-dom";
 
 const Companies = () => {
   return (
-    <div className="min-h-screen bg-background">
-      <Header />
-      
-      <main className="container mx-auto px-4 py-16">
+    <MainLayout>
+      <main className="px-4 py-16">
         {/* Hero Section */}
         <section className="text-center mb-16">
           <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
@@ -128,8 +126,11 @@ const Companies = () => {
             </Button>
           </Link>
         </section>
+        
+        {/* Spacer for mobile ad banner */}
+        <div className="h-24 xl:hidden" />
       </main>
-    </div>
+    </MainLayout>
   );
 };
 
