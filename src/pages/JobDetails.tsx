@@ -304,7 +304,13 @@ const JobDetails = () => {
               <Separator />
 
               <div className="flex gap-4">
-                {hasApplied ? (
+                {userRole === "company" ? (
+                  <div className="flex-1">
+                    <p className="text-sm text-muted-foreground text-center py-2">
+                      Empresas não podem se candidatar a vagas
+                    </p>
+                  </div>
+                ) : hasApplied ? (
                   <div className="flex-1">
                     <Button 
                       size="lg" 

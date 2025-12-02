@@ -30,6 +30,11 @@ export const Header = () => {
                   <Button variant="ghost">Meu Perfil</Button>
                 </Link>
               )}
+              {userRole === "company" && (
+                <Link to="/empresa/dashboard">
+                  <Button variant="ghost">Painel da Empresa</Button>
+                </Link>
+              )}
               <span className="text-sm text-muted-foreground hidden md:inline">
                 {userRole === "candidate" ? "Candidato" : "Empresa"}
               </span>
