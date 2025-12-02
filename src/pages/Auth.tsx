@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Header } from "@/components/Header";
+import { MainLayout } from "@/components/MainLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -48,20 +48,17 @@ const Auth = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background">
-        <Header />
-        <div className="container mx-auto px-4 py-16 flex items-center justify-center">
+      <MainLayout>
+        <div className="px-4 py-16 flex items-center justify-center">
           <p className="text-muted-foreground">Carregando...</p>
         </div>
-      </div>
+      </MainLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <Header />
-      
-      <main className="container mx-auto px-4 py-16">
+    <MainLayout>
+      <main className="px-4 py-16">
         <div className="max-w-md mx-auto">
           <Card>
             <CardHeader className="text-center">
@@ -185,8 +182,11 @@ const Auth = () => {
             </CardContent>
           </Card>
         </div>
+        
+        {/* Spacer for mobile ad banner */}
+        <div className="h-24 xl:hidden" />
       </main>
-    </div>
+    </MainLayout>
   );
 };
 

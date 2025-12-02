@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Header } from "@/components/Header";
+import { MainLayout } from "@/components/MainLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -305,12 +305,11 @@ const CompanyDashboard = () => {
 
   if (authLoading || (user && !userRole)) {
     return (
-      <div className="min-h-screen bg-background">
-        <Header />
-        <div className="container mx-auto px-4 py-8">
+      <MainLayout>
+        <div className="px-4 py-8">
           <p className="text-center text-muted-foreground">Carregando...</p>
         </div>
-      </div>
+      </MainLayout>
     );
   }
 
@@ -464,10 +463,8 @@ const CompanyDashboard = () => {
   );
 
   return (
-    <div className="min-h-screen bg-background">
-      <Header />
-
-      <div className="container mx-auto px-4 py-8">
+    <MainLayout>
+      <div className="px-4 py-8">
         <div className="max-w-6xl mx-auto space-y-6">
           <div className="flex items-center justify-between">
             <div>
@@ -663,11 +660,14 @@ const CompanyDashboard = () => {
                 </DialogDescription>
               </DialogHeader>
               <JobForm onSubmit={handleEditJob} submitLabel="Salvar Alterações" />
-            </DialogContent>
+              </DialogContent>
           </Dialog>
+          
+          {/* Spacer for mobile ad banner */}
+          <div className="h-24 xl:hidden" />
         </div>
       </div>
-    </div>
+    </MainLayout>
   );
 };
 
