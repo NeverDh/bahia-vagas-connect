@@ -51,7 +51,7 @@ const mockAds = [
 ];
 
 export const AdBanner = ({ variant = "vertical", className = "" }: AdBannerProps) => {
-  const randomAds = [...mockAds].sort(() => Math.random() - 0.5).slice(0, variant === "vertical" ? 3 : 1);
+  const randomAds = [...mockAds].sort(() => Math.random() - 0.5).slice(0, variant === "vertical" ? 2 : 1);
 
   if (variant === "horizontal") {
     const ad = randomAds[0];
