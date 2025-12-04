@@ -1,5 +1,6 @@
 import { ReactNode } from "react";
 import { Header } from "./Header";
+import { Footer } from "./Footer";
 import { AdBanner } from "./AdBanner";
 
 interface MainLayoutProps {
@@ -9,10 +10,10 @@ interface MainLayoutProps {
 
 export const MainLayout = ({ children, showAds = true }: MainLayoutProps) => {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col">
       <Header />
       
-      <div className="flex justify-center">
+      <div className="flex justify-center flex-1">
         {/* Left Ad Sidebar - Hidden on mobile/tablet */}
         {showAds && (
           <aside className="hidden xl:block w-[200px] flex-shrink-0 p-4 sticky top-20 h-fit">
@@ -34,6 +35,8 @@ export const MainLayout = ({ children, showAds = true }: MainLayoutProps) => {
           </aside>
         )}
       </div>
+
+      <Footer />
 
       {/* Mobile Ad Banner - Only on mobile */}
       {showAds && (
