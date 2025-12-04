@@ -3,6 +3,7 @@ import { MainLayout } from "@/components/MainLayout";
 import { JobCard } from "@/components/JobCard";
 import { JobFilters } from "@/components/JobFilters";
 import { Pagination } from "@/components/Pagination";
+import { AdBanner } from "@/components/AdBanner";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -172,12 +173,18 @@ const Jobs = () => {
             ) : (
               <>
                 <div className="space-y-4">
-                  {jobs.map((job) => (
-                    <JobCard 
-                      key={job.id} 
-                      job={job} 
-                      hasApplied={appliedJobIds.has(job.id)}
-                    />
+                  {jobs.map((job, index) => (
+                    <div key={job.id}>
+                      <JobCard 
+                        job={job} 
+                        hasApplied={appliedJobIds.has(job.id)}
+                      />
+                      {(index + 1) % 3 === 0 && index < jobs.length - 1 && (
+                        <div className="mt-4">
+                          <AdBanner variant="horizontal" />
+                        </div>
+                      )}
+                    </div>
                   ))}
                 </div>
                 <Pagination
