@@ -100,34 +100,46 @@ export type Database = {
       }
       companies: {
         Row: {
+          cnpj: string | null
           created_at: string
           description: string | null
           id: string
+          is_freelancer: boolean | null
+          is_verified: boolean | null
           location: string | null
           logo_url: string | null
           name: string
+          phone: string | null
           updated_at: string
           user_id: string | null
           website: string | null
         }
         Insert: {
+          cnpj?: string | null
           created_at?: string
           description?: string | null
           id?: string
+          is_freelancer?: boolean | null
+          is_verified?: boolean | null
           location?: string | null
           logo_url?: string | null
           name: string
+          phone?: string | null
           updated_at?: string
           user_id?: string | null
           website?: string | null
         }
         Update: {
+          cnpj?: string | null
           created_at?: string
           description?: string | null
           id?: string
+          is_freelancer?: boolean | null
+          is_verified?: boolean | null
           location?: string | null
           logo_url?: string | null
           name?: string
+          phone?: string | null
           updated_at?: string
           user_id?: string | null
           website?: string | null

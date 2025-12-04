@@ -10,9 +10,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
-import { Plus, Briefcase, Users, MapPin, Edit, Trash2, Eye } from "lucide-react";
+import { Plus, Briefcase, MapPin, Edit, Trash2, Eye, AlertTriangle, Building2, User } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { Pagination } from "@/components/Pagination";
@@ -20,11 +19,11 @@ import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 const contractTypeOptions = [
-  { value: "clt", label: "CLT" },
-  { value: "pj", label: "PJ" },
-  { value: "temporary", label: "Temporário" },
-  { value: "intern", label: "Estágio" },
-  { value: "freelance", label: "Freelance" },
+  { value: "clt", label: "CLT", requiresCompany: true },
+  { value: "pj", label: "PJ", requiresCompany: false },
+  { value: "temporary", label: "Temporário", requiresCompany: true },
+  { value: "intern", label: "Estágio", requiresCompany: true },
+  { value: "freelance", label: "Freelance", requiresCompany: false },
 ];
 
 const experienceLevelOptions = [
@@ -59,6 +58,10 @@ interface Company {
   location: string | null;
   website: string | null;
   logo_url: string | null;
+  cnpj: string | null;
+  is_freelancer: boolean;
+  is_verified: boolean;
+  phone: string | null;
 }
 
 const CompanyDashboard = () => {
@@ -69,12 +72,24 @@ const CompanyDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isProfileDialogOpen, setIsProfileDialogOpen] = useState(false);
   const [editingJob, setEditingJob] = useState<Job | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [totalJobs, setTotalJobs] = useState(0);
 
-  // Form state
+  // Profile form state
+  const [profileForm, setProfileForm] = useState({
+    name: "",
+    description: "",
+    location: "",
+    website: "",
+    phone: "",
+    cnpj: "",
+    is_freelancer: false,
+  });
+
+  // Job form state
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -82,7 +97,7 @@ const CompanyDashboard = () => {
     benefits: "",
     location: "",
     category: "",
-    contract_type: "clt" as "clt" | "pj" | "temporary" | "intern" | "freelance",
+    contract_type: "freelance" as "clt" | "pj" | "temporary" | "intern" | "freelance",
     experience_level: "junior" as "intern" | "junior" | "mid" | "senior" | "specialist",
     salary_min: "",
     salary_max: "",
@@ -130,6 +145,17 @@ const CompanyDashboard = () => {
     }
 
     setCompany(data);
+    
+    // Initialize profile form with company data
+    setProfileForm({
+      name: data.name || "",
+      description: data.description || "",
+      location: data.location || "",
+      website: data.website || "",
+      phone: data.phone || "",
+      cnpj: data.cnpj || "",
+      is_freelancer: data.is_freelancer || false,
+    });
   };
 
   const fetchJobs = async () => {
@@ -158,6 +184,7 @@ const CompanyDashboard = () => {
   };
 
   const resetForm = () => {
+    const defaultContractType = company?.is_freelancer ? "freelance" : "clt";
     setFormData({
       title: "",
       description: "",
@@ -165,7 +192,7 @@ const CompanyDashboard = () => {
       benefits: "",
       location: "",
       category: "",
-      contract_type: "clt",
+      contract_type: defaultContractType as typeof formData.contract_type,
       experience_level: "junior",
       salary_min: "",
       salary_max: "",
@@ -173,8 +200,77 @@ const CompanyDashboard = () => {
     });
   };
 
+  const handleSaveProfile = async () => {
+    if (!company) return;
+
+    // Validation
+    if (!profileForm.name.trim()) {
+      toast.error("Nome é obrigatório");
+      return;
+    }
+
+    if (!profileForm.is_freelancer && !profileForm.cnpj?.trim()) {
+      toast.error("CNPJ é obrigatório para empresas");
+      return;
+    }
+
+    if (profileForm.cnpj && !/^\d{14}$/.test(profileForm.cnpj.replace(/\D/g, ""))) {
+      toast.error("CNPJ inválido. Digite apenas os 14 números");
+      return;
+    }
+
+    const { error } = await supabase
+      .from("companies")
+      .update({
+        name: profileForm.name,
+        description: profileForm.description || null,
+        location: profileForm.location || null,
+        website: profileForm.website || null,
+        phone: profileForm.phone || null,
+        cnpj: profileForm.is_freelancer ? null : profileForm.cnpj.replace(/\D/g, ""),
+        is_freelancer: profileForm.is_freelancer,
+        is_verified: true,
+      })
+      .eq("id", company.id);
+
+    if (error) {
+      console.error("Error updating company:", error);
+      toast.error("Erro ao salvar perfil");
+      return;
+    }
+
+    toast.success("Perfil atualizado com sucesso!");
+    setIsProfileDialogOpen(false);
+    fetchCompanyData();
+  };
+
+  // Get allowed contract types based on company verification
+  const getAllowedContractTypes = () => {
+    if (company?.is_freelancer) {
+      return contractTypeOptions.filter(opt => !opt.requiresCompany);
+    }
+    return contractTypeOptions;
+  };
+
   const handleCreateJob = async () => {
     if (!company) return;
+
+    // Check if profile is verified
+    if (!company.is_verified) {
+      toast.error("Complete seu perfil antes de publicar vagas");
+      setIsCreateDialogOpen(false);
+      setIsProfileDialogOpen(true);
+      return;
+    }
+
+    // Check contract type restrictions for freelancers
+    if (company.is_freelancer) {
+      const allowedTypes = ["freelance", "pj"];
+      if (!allowedTypes.includes(formData.contract_type)) {
+        toast.error("Freelancers só podem publicar vagas do tipo Freelance ou PJ");
+        return;
+      }
+    }
 
     if (!formData.title || !formData.description || !formData.location || !formData.category) {
       toast.error("Preencha todos os campos obrigatórios");
@@ -356,7 +452,7 @@ const CompanyDashboard = () => {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {contractTypeOptions.map((option) => (
+              {getAllowedContractTypes().map((option) => (
                 <SelectItem key={option.value} value={option.value}>
                   {option.label}
                 </SelectItem>
@@ -466,32 +562,77 @@ const CompanyDashboard = () => {
     <MainLayout>
       <div className="px-4 py-8">
         <div className="max-w-6xl mx-auto space-y-6">
+          {/* Profile Completion Alert */}
+          {company && !company.is_verified && (
+            <Card className="border-amber-500/50 bg-amber-500/10">
+              <CardContent className="flex items-center gap-4 py-4">
+                <AlertTriangle className="h-8 w-8 text-amber-500 flex-shrink-0" />
+                <div className="flex-1">
+                  <h3 className="font-semibold text-amber-700 dark:text-amber-400">Complete seu perfil</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Para publicar vagas, você precisa completar o perfil da sua empresa com os dados necessários.
+                  </p>
+                </div>
+                <Button onClick={() => setIsProfileDialogOpen(true)}>
+                  Completar Perfil
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold">Painel da Empresa</h1>
-              <p className="text-muted-foreground">{company?.name}</p>
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <span>{company?.name}</span>
+                {company?.is_verified && (
+                  <Badge variant="secondary" className="text-xs">
+                    {company.is_freelancer ? (
+                      <><User className="h-3 w-3 mr-1" /> Freelancer</>
+                    ) : (
+                      <><Building2 className="h-3 w-3 mr-1" /> Empresa</>
+                    )}
+                  </Badge>
+                )}
+              </div>
             </div>
 
-            <Dialog open={isCreateDialogOpen} onOpenChange={(open) => {
-              setIsCreateDialogOpen(open);
-              if (!open) resetForm();
-            }}>
-              <DialogTrigger asChild>
-                <Button className="gap-2">
-                  <Plus className="h-4 w-4" />
-                  Nova Vaga
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-2xl">
-                <DialogHeader>
-                  <DialogTitle>Criar Nova Vaga</DialogTitle>
-                  <DialogDescription>
-                    Preencha as informações da vaga que deseja publicar
-                  </DialogDescription>
-                </DialogHeader>
-                <JobForm onSubmit={handleCreateJob} submitLabel="Publicar Vaga" />
-              </DialogContent>
-            </Dialog>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => setIsProfileDialogOpen(true)}>
+                <Edit className="h-4 w-4 mr-2" />
+                Editar Perfil
+              </Button>
+              <Dialog open={isCreateDialogOpen} onOpenChange={(open) => {
+                if (open && !company?.is_verified) {
+                  toast.error("Complete seu perfil antes de publicar vagas");
+                  setIsProfileDialogOpen(true);
+                  return;
+                }
+                setIsCreateDialogOpen(open);
+                if (!open) resetForm();
+              }}>
+                <DialogTrigger asChild>
+                  <Button className="gap-2">
+                    <Plus className="h-4 w-4" />
+                    Nova Vaga
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-2xl">
+                  <DialogHeader>
+                    <DialogTitle>Criar Nova Vaga</DialogTitle>
+                    <DialogDescription>
+                      Preencha as informações da vaga que deseja publicar
+                      {company?.is_freelancer && (
+                        <span className="block text-amber-600 mt-1">
+                          Como freelancer, você pode publicar apenas vagas Freelance ou PJ.
+                        </span>
+                      )}
+                    </DialogDescription>
+                  </DialogHeader>
+                  <JobForm onSubmit={handleCreateJob} submitLabel="Publicar Vaga" />
+                </DialogContent>
+              </Dialog>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -661,6 +802,123 @@ const CompanyDashboard = () => {
               </DialogHeader>
               <JobForm onSubmit={handleEditJob} submitLabel="Salvar Alterações" />
               </DialogContent>
+          </Dialog>
+
+          {/* Profile Dialog */}
+          <Dialog open={isProfileDialogOpen} onOpenChange={setIsProfileDialogOpen}>
+            <DialogContent className="max-w-lg">
+              <DialogHeader>
+                <DialogTitle>Perfil da Empresa</DialogTitle>
+                <DialogDescription>
+                  Preencha os dados da sua empresa para publicar vagas
+                </DialogDescription>
+              </DialogHeader>
+              
+              <div className="space-y-4">
+                {/* Type Selection */}
+                <div className="flex items-center justify-between p-4 border rounded-lg">
+                  <div className="flex items-center gap-3">
+                    {profileForm.is_freelancer ? (
+                      <User className="h-5 w-5 text-primary" />
+                    ) : (
+                      <Building2 className="h-5 w-5 text-primary" />
+                    )}
+                    <div>
+                      <p className="font-medium">
+                        {profileForm.is_freelancer ? "Sou Freelancer" : "Tenho uma Empresa"}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {profileForm.is_freelancer 
+                          ? "Pode publicar vagas Freelance e PJ" 
+                          : "Pode publicar todos os tipos de vaga"}
+                      </p>
+                    </div>
+                  </div>
+                  <Switch
+                    checked={profileForm.is_freelancer}
+                    onCheckedChange={(checked) => setProfileForm({ ...profileForm, is_freelancer: checked, cnpj: checked ? "" : profileForm.cnpj })}
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="profile_name">Nome {profileForm.is_freelancer ? "Profissional" : "da Empresa"} *</Label>
+                  <Input
+                    id="profile_name"
+                    value={profileForm.name}
+                    onChange={(e) => setProfileForm({ ...profileForm, name: e.target.value })}
+                    placeholder={profileForm.is_freelancer ? "Seu nome profissional" : "Nome da empresa"}
+                  />
+                </div>
+
+                {!profileForm.is_freelancer && (
+                  <div>
+                    <Label htmlFor="profile_cnpj">CNPJ *</Label>
+                    <Input
+                      id="profile_cnpj"
+                      value={profileForm.cnpj}
+                      onChange={(e) => setProfileForm({ ...profileForm, cnpj: e.target.value })}
+                      placeholder="00.000.000/0000-00"
+                      maxLength={18}
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Necessário para publicar vagas CLT, Temporário ou Estágio
+                    </p>
+                  </div>
+                )}
+
+                <div>
+                  <Label htmlFor="profile_phone">Telefone</Label>
+                  <Input
+                    id="profile_phone"
+                    value={profileForm.phone}
+                    onChange={(e) => setProfileForm({ ...profileForm, phone: e.target.value })}
+                    placeholder="(71) 99999-9999"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="profile_location">Localização</Label>
+                  <Input
+                    id="profile_location"
+                    value={profileForm.location}
+                    onChange={(e) => setProfileForm({ ...profileForm, location: e.target.value })}
+                    placeholder="Salvador, BA"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="profile_website">Website</Label>
+                  <Input
+                    id="profile_website"
+                    value={profileForm.website}
+                    onChange={(e) => setProfileForm({ ...profileForm, website: e.target.value })}
+                    placeholder="https://seusite.com.br"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="profile_description">Descrição</Label>
+                  <Textarea
+                    id="profile_description"
+                    value={profileForm.description}
+                    onChange={(e) => setProfileForm({ ...profileForm, description: e.target.value })}
+                    placeholder={profileForm.is_freelancer 
+                      ? "Conte sobre sua experiência e especialidades..." 
+                      : "Descreva sua empresa, cultura e valores..."}
+                    rows={3}
+                  />
+                </div>
+
+                <div className="flex justify-end gap-2 pt-4">
+                  <Button variant="outline" onClick={() => setIsProfileDialogOpen(false)}>
+                    Cancelar
+                  </Button>
+                  <Button onClick={handleSaveProfile}>
+                    Salvar Perfil
+                  </Button>
+                </div>
+              </div>
+            </DialogContent>
           </Dialog>
           
           {/* Spacer for mobile ad banner */}
