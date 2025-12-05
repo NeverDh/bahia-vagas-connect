@@ -5,7 +5,10 @@ import { JobFilters } from "@/components/JobFilters";
 import { Pagination } from "@/components/Pagination";
 import { AdBanner } from "@/components/AdBanner";
 import { Input } from "@/components/ui/input";
-import { Search } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Badge } from "@/components/ui/badge";
+import { Search, SlidersHorizontal, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
@@ -15,9 +18,11 @@ const Jobs = () => {
   const [totalJobs, setTotalJobs] = useState(0);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [mobileSearchTerm, setMobileSearchTerm] = useState("");
   const [appliedJobIds, setAppliedJobIds] = useState<Set<string>>(new Set());
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
   const { toast } = useToast();
   const { user, userRole } = useAuth();
   
@@ -26,6 +31,11 @@ const Jobs = () => {
     experienceLevels: [] as string[],
     remoteOnly: false
   });
+
+  const activeFiltersCount = 
+    filters.contractTypes.length + 
+    filters.experienceLevels.length + 
+    (filters.remoteOnly ? 1 : 0);
 
   useEffect(() => {
     setCurrentPage(1);
@@ -140,12 +150,34 @@ const Jobs = () => {
     }
   };
 
+  const handleApplyMobileFilters = () => {
+    setSearchTerm(mobileSearchTerm);
+    setIsFilterOpen(false);
+  };
+
+  const handleClearFilters = () => {
+    setFilters({
+      contractTypes: [],
+      experienceLevels: [],
+      remoteOnly: false
+    });
+    setMobileSearchTerm("");
+    setSearchTerm("");
+  };
+
+  const handleOpenFilterSheet = () => {
+    setMobileSearchTerm(searchTerm);
+    setIsFilterOpen(true);
+  };
+
   return (
     <MainLayout>
       <div className="px-4 py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-4">Vagas Disponíveis</h1>
-          <div className="relative max-w-2xl">
+          
+          {/* Desktop Search */}
+          <div className="hidden lg:block relative max-w-2xl">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
             <Input
               placeholder="Buscar por cargo ou categoria..."
@@ -154,10 +186,84 @@ const Jobs = () => {
               className="pl-10"
             />
           </div>
+
+          {/* Mobile Filter Button */}
+          <div className="lg:hidden">
+            <Sheet open={isFilterOpen} onOpenChange={setIsFilterOpen}>
+              <SheetTrigger asChild>
+                <Button 
+                  variant="outline" 
+                  className="w-full justify-between"
+                  onClick={handleOpenFilterSheet}
+                >
+                  <span className="flex items-center gap-2">
+                    <SlidersHorizontal className="h-4 w-4" />
+                    Buscar e Filtrar
+                  </span>
+                  {activeFiltersCount > 0 && (
+                    <Badge variant="secondary" className="ml-2">
+                      {activeFiltersCount}
+                    </Badge>
+                  )}
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="bottom" className="h-[85vh] rounded-t-xl">
+                <SheetHeader className="mb-4">
+                  <div className="flex items-center justify-between">
+                    <SheetTitle>Buscar e Filtrar</SheetTitle>
+                    {(activeFiltersCount > 0 || mobileSearchTerm) && (
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={handleClearFilters}
+                        className="text-destructive hover:text-destructive"
+                      >
+                        <X className="h-4 w-4 mr-1" />
+                        Limpar
+                      </Button>
+                    )}
+                  </div>
+                </SheetHeader>
+
+                <div className="space-y-6 overflow-y-auto max-h-[calc(85vh-180px)]">
+                  {/* Mobile Search Input */}
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                    <Input
+                      placeholder="Buscar por cargo ou categoria..."
+                      value={mobileSearchTerm}
+                      onChange={(e) => setMobileSearchTerm(e.target.value)}
+                      className="pl-10"
+                    />
+                  </div>
+
+                  {/* Filters */}
+                  <JobFilters 
+                    filters={filters} 
+                    onFilterChange={setFilters} 
+                    variant="mobile"
+                  />
+                </div>
+
+                {/* Apply Button */}
+                <div className="absolute bottom-0 left-0 right-0 p-4 bg-background border-t">
+                  <Button 
+                    className="w-full" 
+                    size="lg"
+                    onClick={handleApplyMobileFilters}
+                  >
+                    Aplicar Filtros
+                    {totalJobs > 0 && ` (${totalJobs} vagas)`}
+                  </Button>
+                </div>
+              </SheetContent>
+            </Sheet>
+          </div>
         </div>
 
         <div className="grid lg:grid-cols-4 gap-6">
-          <div className="lg:col-span-1">
+          {/* Desktop Filters */}
+          <div className="hidden lg:block lg:col-span-1">
             <JobFilters filters={filters} onFilterChange={setFilters} />
           </div>
 
