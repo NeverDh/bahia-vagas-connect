@@ -22,7 +22,11 @@ const contractTypes = [
 ];
 
 const experienceLevels = [
+  { value: "jovem_aprendiz", label: "Jovem Aprendiz" },
+  { value: "auxiliar", label: "Auxiliar" },
+  { value: "assistente", label: "Assistente" },
   { value: "intern", label: "Estágio" },
+  { value: "freelancer", label: "Freelancer" },
   { value: "junior", label: "Júnior" },
   { value: "mid", label: "Pleno" },
   { value: "senior", label: "Sênior" },
