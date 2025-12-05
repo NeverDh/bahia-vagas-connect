@@ -27,7 +27,11 @@ const contractTypeOptions = [
 ];
 
 const experienceLevelOptions = [
+  { value: "jovem_aprendiz", label: "Jovem Aprendiz" },
+  { value: "auxiliar", label: "Auxiliar" },
+  { value: "assistente", label: "Assistente" },
   { value: "intern", label: "Estágio" },
+  { value: "freelancer", label: "Freelancer" },
   { value: "junior", label: "Júnior" },
   { value: "mid", label: "Pleno" },
   { value: "senior", label: "Sênior" },
@@ -100,7 +104,7 @@ const CompanyDashboard = () => {
     location: "",
     category: "",
     contract_type: "freelance" as "clt" | "pj" | "temporary" | "intern" | "freelance",
-    experience_level: "junior" as "intern" | "junior" | "mid" | "senior" | "specialist",
+    experience_level: "junior" as "jovem_aprendiz" | "auxiliar" | "assistente" | "intern" | "freelancer" | "junior" | "mid" | "senior" | "specialist",
     salary_min: "",
     salary_max: "",
     remote_option: false,

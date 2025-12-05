@@ -251,7 +251,16 @@ export type Database = {
     Enums: {
       app_role: "candidate" | "company"
       contract_type: "clt" | "pj" | "temporary" | "intern" | "freelance"
-      experience_level: "intern" | "junior" | "mid" | "senior" | "specialist"
+      experience_level:
+        | "intern"
+        | "junior"
+        | "mid"
+        | "senior"
+        | "specialist"
+        | "auxiliar"
+        | "assistente"
+        | "freelancer"
+        | "jovem_aprendiz"
       job_status: "active" | "closed" | "draft"
     }
     CompositeTypes: {
@@ -382,7 +391,17 @@ export const Constants = {
     Enums: {
       app_role: ["candidate", "company"],
       contract_type: ["clt", "pj", "temporary", "intern", "freelance"],
-      experience_level: ["intern", "junior", "mid", "senior", "specialist"],
+      experience_level: [
+        "intern",
+        "junior",
+        "mid",
+        "senior",
+        "specialist",
+        "auxiliar",
+        "assistente",
+        "freelancer",
+        "jovem_aprendiz",
+      ],
       job_status: ["active", "closed", "draft"],
     },
   },
