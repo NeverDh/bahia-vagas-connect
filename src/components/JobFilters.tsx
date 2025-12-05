@@ -10,6 +10,7 @@ interface JobFiltersProps {
     remoteOnly: boolean;
   };
   onFilterChange: (filters: any) => void;
+  variant?: "desktop" | "mobile";
 }
 
 const contractTypes = [
@@ -28,7 +29,7 @@ const experienceLevels = [
   { value: "specialist", label: "Especialista" }
 ];
 
-export const JobFilters = ({ filters, onFilterChange }: JobFiltersProps) => {
+export const JobFilters = ({ filters, onFilterChange, variant = "desktop" }: JobFiltersProps) => {
   const handleContractTypeChange = (value: string, checked: boolean) => {
     const newTypes = checked
       ? [...filters.contractTypes, value]
@@ -43,60 +44,67 @@ export const JobFilters = ({ filters, onFilterChange }: JobFiltersProps) => {
     onFilterChange({ ...filters, experienceLevels: newLevels });
   };
 
+  const content = (
+    <div className="space-y-4">
+      <div className="flex items-center space-x-2">
+        <Checkbox 
+          id="remote" 
+          checked={filters.remoteOnly}
+          onCheckedChange={(checked) => onFilterChange({ ...filters, remoteOnly: checked })}
+        />
+        <Label htmlFor="remote" className="cursor-pointer">Apenas vagas remotas</Label>
+      </div>
+      
+      <Separator />
+      
+      <div>
+        <Label className="text-sm font-semibold mb-3 block">Tipo de Contrato</Label>
+        <div className="space-y-2">
+          {contractTypes.map(type => (
+            <div key={type.value} className="flex items-center space-x-2">
+              <Checkbox 
+                id={`contract-${type.value}`}
+                checked={filters.contractTypes.includes(type.value)}
+                onCheckedChange={(checked) => handleContractTypeChange(type.value, checked as boolean)}
+              />
+              <Label htmlFor={`contract-${type.value}`} className="cursor-pointer text-sm">
+                {type.label}
+              </Label>
+            </div>
+          ))}
+        </div>
+      </div>
+      
+      <Separator />
+      
+      <div>
+        <Label className="text-sm font-semibold mb-3 block">Nível de Experiência</Label>
+        <div className="space-y-2">
+          {experienceLevels.map(level => (
+            <div key={level.value} className="flex items-center space-x-2">
+              <Checkbox 
+                id={`exp-${level.value}`}
+                checked={filters.experienceLevels.includes(level.value)}
+                onCheckedChange={(checked) => handleExperienceChange(level.value, checked as boolean)}
+              />
+              <Label htmlFor={`exp-${level.value}`} className="cursor-pointer text-sm">
+                {level.label}
+              </Label>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+
+  if (variant === "mobile") {
+    return content;
+  }
+
   return (
     <Card className="p-6 sticky top-20">
       <h3 className="font-semibold text-lg mb-4">Filtros</h3>
-      
-      <div className="space-y-4">
-        <div className="flex items-center space-x-2">
-          <Checkbox 
-            id="remote" 
-            checked={filters.remoteOnly}
-            onCheckedChange={(checked) => onFilterChange({ ...filters, remoteOnly: checked })}
-          />
-          <Label htmlFor="remote" className="cursor-pointer">Apenas vagas remotas</Label>
-        </div>
-        
-        <Separator />
-        
-        <div>
-          <Label className="text-sm font-semibold mb-3 block">Tipo de Contrato</Label>
-          <div className="space-y-2">
-            {contractTypes.map(type => (
-              <div key={type.value} className="flex items-center space-x-2">
-                <Checkbox 
-                  id={`contract-${type.value}`}
-                  checked={filters.contractTypes.includes(type.value)}
-                  onCheckedChange={(checked) => handleContractTypeChange(type.value, checked as boolean)}
-                />
-                <Label htmlFor={`contract-${type.value}`} className="cursor-pointer text-sm">
-                  {type.label}
-                </Label>
-              </div>
-            ))}
-          </div>
-        </div>
-        
-        <Separator />
-        
-        <div>
-          <Label className="text-sm font-semibold mb-3 block">Nível de Experiência</Label>
-          <div className="space-y-2">
-            {experienceLevels.map(level => (
-              <div key={level.value} className="flex items-center space-x-2">
-                <Checkbox 
-                  id={`exp-${level.value}`}
-                  checked={filters.experienceLevels.includes(level.value)}
-                  onCheckedChange={(checked) => handleExperienceChange(level.value, checked as boolean)}
-                />
-                <Label htmlFor={`exp-${level.value}`} className="cursor-pointer text-sm">
-                  {level.label}
-                </Label>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
+      {content}
     </Card>
   );
 };
