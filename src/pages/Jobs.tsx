@@ -29,13 +29,16 @@ const Jobs = () => {
   const [filters, setFilters] = useState({
     contractTypes: [] as string[],
     experienceLevels: [] as string[],
-    remoteOnly: false
+    remoteOnly: false,
+    location: "",
+    sortOrder: "newest" as "newest" | "oldest"
   });
 
   const activeFiltersCount = 
     filters.contractTypes.length + 
     filters.experienceLevels.length + 
-    (filters.remoteOnly ? 1 : 0);
+    (filters.remoteOnly ? 1 : 0) +
+    (filters.location ? 1 : 0);
 
   useEffect(() => {
     setCurrentPage(1);
@@ -74,6 +77,10 @@ const Jobs = () => {
         countQuery = countQuery.in("experience_level", filters.experienceLevels as any);
       }
 
+      if (filters.location) {
+        countQuery = countQuery.ilike("location", `%${filters.location}%`);
+      }
+
       // Get total count
       const { count, error: countError } = await countQuery;
       
@@ -94,7 +101,7 @@ const Jobs = () => {
           )
         `)
         .eq("status", "active")
-        .order("created_at", { ascending: false })
+        .order("created_at", { ascending: filters.sortOrder === "oldest" })
         .range(from, to);
 
       if (searchTerm) {
@@ -111,6 +118,10 @@ const Jobs = () => {
 
       if (filters.experienceLevels.length > 0) {
         dataQuery = dataQuery.in("experience_level", filters.experienceLevels as any);
+      }
+
+      if (filters.location) {
+        dataQuery = dataQuery.ilike("location", `%${filters.location}%`);
       }
 
       const { data, error } = await dataQuery;
@@ -159,7 +170,9 @@ const Jobs = () => {
     setFilters({
       contractTypes: [],
       experienceLevels: [],
-      remoteOnly: false
+      remoteOnly: false,
+      location: "",
+      sortOrder: "newest"
     });
     setMobileSearchTerm("");
     setSearchTerm("");
