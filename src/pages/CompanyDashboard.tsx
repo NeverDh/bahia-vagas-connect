@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
-import { Plus, Briefcase, MapPin, Edit, Trash2, Eye, AlertTriangle, Building2, User } from "lucide-react";
+import { Plus, Briefcase, MapPin, Edit, Trash2, Eye, AlertTriangle, Building2, User, Loader2, Search } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { Pagination } from "@/components/Pagination";
@@ -88,6 +88,8 @@ const CompanyDashboard = () => {
     cnpj: "",
     is_freelancer: false,
   });
+  const [cnpjLoading, setCnpjLoading] = useState(false);
+  const [cnpjValidated, setCnpjValidated] = useState(false);
 
   // Job form state
   const [formData, setFormData] = useState({
@@ -200,6 +202,77 @@ const CompanyDashboard = () => {
     });
   };
 
+  const formatCNPJ = (value: string) => {
+    const numbers = value.replace(/\D/g, "");
+    return numbers
+      .replace(/^(\d{2})(\d)/, "$1.$2")
+      .replace(/^(\d{2})\.(\d{3})(\d)/, "$1.$2.$3")
+      .replace(/\.(\d{3})(\d)/, ".$1/$2")
+      .replace(/(\d{4})(\d)/, "$1-$2")
+      .slice(0, 18);
+  };
+
+  const handleCNPJChange = (value: string) => {
+    const formatted = formatCNPJ(value);
+    setProfileForm({ ...profileForm, cnpj: formatted });
+    setCnpjValidated(false);
+  };
+
+  const validateAndFetchCNPJ = async () => {
+    const cleanCNPJ = profileForm.cnpj.replace(/\D/g, "");
+    
+    if (cleanCNPJ.length !== 14) {
+      toast.error("Digite os 14 dígitos do CNPJ");
+      return;
+    }
+
+    setCnpjLoading(true);
+    
+    try {
+      const response = await supabase.functions.invoke("validate-cnpj", {
+        body: { cnpj: cleanCNPJ },
+      });
+
+      if (response.error) {
+        toast.error("Erro ao validar CNPJ");
+        return;
+      }
+
+      const data = response.data;
+
+      if (!data.valid) {
+        toast.error(data.error || "CNPJ inválido");
+        return;
+      }
+
+      if (data.company) {
+        const company = data.company;
+        
+        // Auto-fill form with company data
+        setProfileForm(prev => ({
+          ...prev,
+          name: company.nome_fantasia || company.razao_social || prev.name,
+          location: company.municipio && company.uf ? `${company.municipio}, ${company.uf}` : prev.location,
+          phone: company.telefone || prev.phone,
+          description: company.atividade_principal ? `${company.atividade_principal}` : prev.description,
+        }));
+
+        setCnpjValidated(true);
+        toast.success("CNPJ válido! Dados preenchidos automaticamente", {
+          description: `${company.razao_social} - ${company.situacao_cadastral}`,
+        });
+      } else {
+        setCnpjValidated(true);
+        toast.success("CNPJ válido!");
+      }
+    } catch (error) {
+      console.error("Error validating CNPJ:", error);
+      toast.error("Erro ao validar CNPJ. Tente novamente.");
+    } finally {
+      setCnpjLoading(false);
+    }
+  };
+
   const handleSaveProfile = async () => {
     if (!company) return;
 
@@ -214,8 +287,8 @@ const CompanyDashboard = () => {
       return;
     }
 
-    if (profileForm.cnpj && !/^\d{14}$/.test(profileForm.cnpj.replace(/\D/g, ""))) {
-      toast.error("CNPJ inválido. Digite apenas os 14 números");
+    if (!profileForm.is_freelancer && !cnpjValidated) {
+      toast.error("Valide o CNPJ antes de salvar");
       return;
     }
 
@@ -241,6 +314,7 @@ const CompanyDashboard = () => {
 
     toast.success("Perfil atualizado com sucesso!");
     setIsProfileDialogOpen(false);
+    setCnpjValidated(false);
     fetchCompanyData();
   };
 
@@ -853,15 +927,32 @@ const CompanyDashboard = () => {
                 {!profileForm.is_freelancer && (
                   <div>
                     <Label htmlFor="profile_cnpj">CNPJ *</Label>
-                    <Input
-                      id="profile_cnpj"
-                      value={profileForm.cnpj}
-                      onChange={(e) => setProfileForm({ ...profileForm, cnpj: e.target.value })}
-                      placeholder="00.000.000/0000-00"
-                      maxLength={18}
-                    />
+                    <div className="flex gap-2">
+                      <Input
+                        id="profile_cnpj"
+                        value={profileForm.cnpj}
+                        onChange={(e) => handleCNPJChange(e.target.value)}
+                        placeholder="00.000.000/0000-00"
+                        maxLength={18}
+                        className={cnpjValidated ? "border-green-500" : ""}
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={validateAndFetchCNPJ}
+                        disabled={cnpjLoading || profileForm.cnpj.replace(/\D/g, "").length !== 14}
+                      >
+                        {cnpjLoading ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Search className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </div>
                     <p className="text-xs text-muted-foreground mt-1">
-                      Necessário para publicar vagas CLT, Temporário ou Estágio
+                      {cnpjValidated 
+                        ? "✓ CNPJ validado com sucesso" 
+                        : "Digite o CNPJ e clique no botão para validar e buscar dados"}
                     </p>
                   </div>
                 )}
