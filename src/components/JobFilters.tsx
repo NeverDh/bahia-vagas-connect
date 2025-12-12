@@ -3,6 +3,12 @@ import { Label } from "./ui/label";
 import { Checkbox } from "./ui/checkbox";
 import { Separator } from "./ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "./ui/command";
+import { Button } from "./ui/button";
+import { Check, ChevronsUpDown } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { useState } from "react";
 
 interface JobFiltersProps {
   filters: {
@@ -105,6 +111,8 @@ const bahiaMunicipios = [
 ];
 
 export const JobFilters = ({ filters, onFilterChange, variant = "desktop" }: JobFiltersProps) => {
+  const [locationOpen, setLocationOpen] = useState(false);
+
   const handleContractTypeChange = (value: string, checked: boolean) => {
     const newTypes = checked
       ? [...filters.contractTypes, value]
@@ -140,25 +148,65 @@ export const JobFilters = ({ filters, onFilterChange, variant = "desktop" }: Job
 
       <Separator />
 
-      {/* Location Filter */}
+      {/* Location Filter with Autocomplete */}
       <div>
         <Label className="text-sm font-semibold mb-2 block">Município</Label>
-        <Select
-          value={filters.location || "all"}
-          onValueChange={(value) => onFilterChange({ ...filters, location: value === "all" ? "" : value })}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Todos os municípios" />
-          </SelectTrigger>
-          <SelectContent className="max-h-[300px]">
-            <SelectItem value="all">Todos os municípios</SelectItem>
-            {bahiaMunicipios.map(municipio => (
-              <SelectItem key={municipio} value={municipio}>
-                {municipio}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <Popover open={locationOpen} onOpenChange={setLocationOpen}>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              role="combobox"
+              aria-expanded={locationOpen}
+              className="w-full justify-between font-normal"
+            >
+              {filters.location || "Todos os municípios"}
+              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-full p-0 pointer-events-auto" align="start">
+            <Command>
+              <CommandInput placeholder="Buscar município..." />
+              <CommandList>
+                <CommandEmpty>Município não encontrado.</CommandEmpty>
+                <CommandGroup>
+                  <CommandItem
+                    value="all"
+                    onSelect={() => {
+                      onFilterChange({ ...filters, location: "" });
+                      setLocationOpen(false);
+                    }}
+                  >
+                    <Check
+                      className={cn(
+                        "mr-2 h-4 w-4",
+                        !filters.location ? "opacity-100" : "opacity-0"
+                      )}
+                    />
+                    Todos os municípios
+                  </CommandItem>
+                  {bahiaMunicipios.map(municipio => (
+                    <CommandItem
+                      key={municipio}
+                      value={municipio}
+                      onSelect={(value) => {
+                        onFilterChange({ ...filters, location: value });
+                        setLocationOpen(false);
+                      }}
+                    >
+                      <Check
+                        className={cn(
+                          "mr-2 h-4 w-4",
+                          filters.location === municipio ? "opacity-100" : "opacity-0"
+                        )}
+                      />
+                      {municipio}
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              </CommandList>
+            </Command>
+          </PopoverContent>
+        </Popover>
       </div>
 
       <Separator />

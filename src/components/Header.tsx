@@ -1,9 +1,10 @@
 import { Link } from "react-router-dom";
 import { Button } from "./ui/button";
-import { Briefcase, User, LogOut, Menu, X } from "lucide-react";
+import { Briefcase, User, LogOut, Menu } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useState } from "react";
 import { Sheet, SheetContent, SheetTrigger } from "./ui/sheet";
+import { ThemeToggle } from "./ThemeToggle";
 
 export const Header = () => {
   const { user, userRole, signOut } = useAuth();
@@ -75,6 +76,7 @@ export const Header = () => {
               {userRole === "candidate" ? "Candidato" : "Empresa"}
             </span>
           )}
+          <ThemeToggle />
         </nav>
 
         {/* Mobile Navigation */}
@@ -87,6 +89,10 @@ export const Header = () => {
           <SheetContent side="right" className="w-[280px] pt-12">
             <nav className="flex flex-col gap-2">
               <NavItems mobile />
+              <div className="flex items-center gap-2 px-4 pt-4 border-t mt-4">
+                <span className="text-sm text-muted-foreground">Tema:</span>
+                <ThemeToggle />
+              </div>
             </nav>
           </SheetContent>
         </Sheet>
