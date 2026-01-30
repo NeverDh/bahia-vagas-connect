@@ -1,13 +1,15 @@
 import { Link } from "react-router-dom";
 import { Button } from "./ui/button";
-import { Briefcase, User, LogOut, Menu } from "lucide-react";
+import { Briefcase, User, LogOut, Menu, Shield } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { useAdmin } from "@/hooks/useAdmin";
 import { useState } from "react";
 import { Sheet, SheetContent, SheetTrigger } from "./ui/sheet";
 import { ThemeToggle } from "./ThemeToggle";
 
 export const Header = () => {
   const { user, userRole, signOut } = useAuth();
+  const { isAdmin } = useAdmin();
   const [open, setOpen] = useState(false);
 
   const NavItems = ({ mobile = false }: { mobile?: boolean }) => (
@@ -28,6 +30,14 @@ export const Header = () => {
           {userRole === "company" && (
             <Link to="/empresa/dashboard" onClick={() => mobile && setOpen(false)}>
               <Button variant="ghost" className={mobile ? "w-full justify-start" : ""}>Painel da Empresa</Button>
+            </Link>
+          )}
+          {isAdmin && (
+            <Link to="/admin" onClick={() => mobile && setOpen(false)}>
+              <Button variant="ghost" className={mobile ? "w-full justify-start gap-2" : "gap-2"}>
+                <Shield className="h-4 w-4" />
+                Admin
+              </Button>
             </Link>
           )}
           {mobile && (
