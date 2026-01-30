@@ -22,6 +22,7 @@ interface JSearchJob {
   };
   job_is_remote: boolean;
   job_posted_at_datetime_utc: string;
+  job_apply_link?: string;
 }
 
 // Map JSearch employment type to our contract_type enum
@@ -202,6 +203,7 @@ serve(async (req) => {
       salary_min: job.job_min_salary || null,
       salary_max: job.job_max_salary || null,
       status: 'active',
+      external_url: job.job_apply_link || null,
     }));
 
     if (jobsToInsert.length === 0) {
