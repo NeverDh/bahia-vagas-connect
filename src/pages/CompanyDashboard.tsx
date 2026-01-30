@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
 import { Plus, Briefcase, MapPin, Edit, Trash2, Eye, AlertTriangle, Building2, User, Loader2, Search } from "lucide-react";
+import { ImportJobsButton } from "@/components/ImportJobsButton";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { Pagination } from "@/components/Pagination";
@@ -695,6 +696,7 @@ const CompanyDashboard = () => {
                     Nova Vaga
                   </Button>
                 </DialogTrigger>
+                <ImportJobsButton onImportComplete={fetchJobs} />
                 <DialogContent className="max-w-2xl">
                   <DialogHeader>
                     <DialogTitle>Criar Nova Vaga</DialogTitle>
