@@ -190,7 +190,7 @@ serve(async (req) => {
       return acc;
     }, []);
 
-    // Transform and insert jobs
+    // Transform jobs
     const jobsToInsert = uniqueJobs.slice(0, maxJobs).map((job: JSearchJob) => ({
       title: job.job_title,
       description: job.job_description || 'Descrição não disponível',
@@ -217,9 +217,70 @@ serve(async (req) => {
       );
     }
 
+    // Get existing jobs by external_url to avoid duplicates
+    const externalUrls: string[] = jobsToInsert
+      .map((j: { external_url: string | null }) => j.external_url)
+      .filter((url: string | null): url is string => url !== null);
+
+    let existingUrls: Set<string> = new Set();
+    
+    if (externalUrls.length > 0) {
+      const { data: existingJobs } = await supabase
+        .from('jobs')
+        .select('external_url')
+        .in('external_url', externalUrls);
+      
+      if (existingJobs) {
+        existingUrls = new Set(
+          existingJobs
+            .map((j: { external_url: string | null }) => j.external_url)
+            .filter((url: string | null): url is string => url !== null)
+        );
+      }
+    }
+
+    // Also check by title + location to catch duplicates without external_url
+    const { data: existingByTitle } = await supabase
+      .from('jobs')
+      .select('title, location');
+
+    const existingTitleLocations = new Set(
+      (existingByTitle || []).map((j: { title: string; location: string }) => `${j.title}|${j.location}`)
+    );
+
+    // Filter out jobs that already exist
+    const newJobs = jobsToInsert.filter((job: { external_url: string | null; title: string; location: string }) => {
+      // Skip if external_url already exists
+      if (job.external_url && existingUrls.has(job.external_url)) {
+        console.log(`Vaga duplicada (URL): ${job.title}`);
+        return false;
+      }
+      // Skip if title + location already exists
+      if (existingTitleLocations.has(`${job.title}|${job.location}`)) {
+        console.log(`Vaga duplicada (título/local): ${job.title}`);
+        return false;
+      }
+      return true;
+    });
+
+    const skippedCount = jobsToInsert.length - newJobs.length;
+    console.log(`Vagas ignoradas (já existem): ${skippedCount}`);
+
+    if (newJobs.length === 0) {
+      return new Response(
+        JSON.stringify({ 
+          success: true, 
+          message: `Nenhuma vaga nova para importar (${skippedCount} já existiam)`,
+          imported: 0,
+          skipped: skippedCount
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     const { data: insertedJobs, error: insertError } = await supabase
       .from('jobs')
-      .insert(jobsToInsert)
+      .insert(newJobs)
       .select('id');
 
     if (insertError) {
@@ -232,8 +293,9 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         success: true, 
-        message: `${insertedJobs?.length || 0} vagas importadas com sucesso`,
+        message: `${insertedJobs?.length || 0} vagas importadas com sucesso${skippedCount > 0 ? ` (${skippedCount} ignoradas por já existirem)` : ''}`,
         imported: insertedJobs?.length || 0,
+        skipped: skippedCount,
         total_found: uniqueJobs.length
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
