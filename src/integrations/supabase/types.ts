@@ -156,6 +156,7 @@ export type Database = {
           description: string
           experience_level: Database["public"]["Enums"]["experience_level"]
           expires_at: string | null
+          external_url: string | null
           id: string
           location: string
           remote_option: boolean
@@ -175,6 +176,7 @@ export type Database = {
           description: string
           experience_level: Database["public"]["Enums"]["experience_level"]
           expires_at?: string | null
+          external_url?: string | null
           id?: string
           location: string
           remote_option?: boolean
@@ -194,6 +196,7 @@ export type Database = {
           description?: string
           experience_level?: Database["public"]["Enums"]["experience_level"]
           expires_at?: string | null
+          external_url?: string | null
           id?: string
           location?: string
           remote_option?: boolean

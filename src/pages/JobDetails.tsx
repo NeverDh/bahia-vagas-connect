@@ -44,6 +44,7 @@ interface Job {
   remote_option: boolean;
   created_at: string;
   category: string;
+  external_url?: string;
   companies?: {
     name: string;
     logo_url?: string;
@@ -301,7 +302,16 @@ const JobDetails = () => {
               <Separator />
 
               <div className="flex gap-4">
-                {userRole === "company" ? (
+                {job.external_url ? (
+                  <Button 
+                    size="lg" 
+                    className="flex-1"
+                    onClick={() => window.open(job.external_url, '_blank')}
+                  >
+                    <ExternalLink className="h-4 w-4 mr-2" />
+                    Candidatar-se no site original
+                  </Button>
+                ) : userRole === "company" ? (
                   <div className="flex-1">
                     <p className="text-sm text-muted-foreground text-center py-2">
                       Empresas não podem se candidatar a vagas
