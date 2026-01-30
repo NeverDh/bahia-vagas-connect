@@ -3,11 +3,17 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 
 export const useAdmin = () => {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Wait for auth to finish loading
+    if (authLoading) {
+      setLoading(true);
+      return;
+    }
+
     const checkAdminRole = async () => {
       if (!user) {
         setIsAdmin(false);
@@ -15,6 +21,7 @@ export const useAdmin = () => {
         return;
       }
 
+      setLoading(true);
       try {
         const { data, error } = await supabase.rpc("has_role", {
           _user_id: user.id,
@@ -36,7 +43,7 @@ export const useAdmin = () => {
     };
 
     checkAdminRole();
-  }, [user]);
+  }, [user, authLoading]);
 
   return { isAdmin, loading };
 };
