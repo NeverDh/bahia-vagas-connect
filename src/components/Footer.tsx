@@ -45,21 +45,6 @@ export const Footer = () => {
                   Empresas
                 </Link>
               </li>
-              <li>
-                <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
-                  Blog de Carreira
-                </a>
-              </li>
-              <li>
-                <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
-                  Dicas de Currículo
-                </a>
-              </li>
-              <li>
-                <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
-                  Preparação para Entrevistas
-                </a>
-              </li>
             </ul>
           </div>
 
