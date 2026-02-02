@@ -71,39 +71,45 @@ export const Header = () => {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-primary">
-      <div className="flex h-16 items-center justify-between px-4 md:px-6 max-w-6xl mx-auto bg-background">
-        <Link to="/" className="flex items-center">
-          <img src={logo} alt="Bahia Vagas" className="h-[120px]" />
-        </Link>
+      <div className="flex h-16 items-center max-w-6xl mx-auto">
+        {/* Logo area with white background */}
+        <div className="flex items-center bg-background h-full pr-[10px]">
+          <Link to="/" className="flex items-center px-4 md:px-6">
+            <img src={logo} alt="Bahia Vagas" className="h-[120px]" />
+          </Link>
+        </div>
         
-        {/* Desktop Navigation */}
-        <nav className="hidden md:flex items-center gap-4">
-          <NavItems />
-          {user && (
-            <span className="text-sm text-orange-500">
-              {userRole === "candidate" ? "Candidato" : "Empresa"}
-            </span>
-          )}
-          <ThemeToggle />
-        </nav>
+        {/* Navigation area */}
+        <div className="flex-1 flex items-center justify-end h-full px-4 md:px-6">
+          {/* Desktop Navigation */}
+          <nav className="hidden md:flex items-center gap-4">
+            <NavItems />
+            {user && (
+              <span className="text-sm text-orange-500">
+                {userRole === "candidate" ? "Candidato" : "Empresa"}
+              </span>
+            )}
+            <ThemeToggle />
+          </nav>
 
-        {/* Mobile Navigation */}
-        <Sheet open={open} onOpenChange={setOpen}>
-          <SheetTrigger asChild className="md:hidden">
-            <Button variant="ghost" size="icon">
-              <Menu className="h-6 w-6" />
-            </Button>
-          </SheetTrigger>
-          <SheetContent side="right" className="w-[280px] pt-12">
-            <nav className="flex flex-col gap-2">
-              <NavItems mobile />
-              <div className="flex items-center gap-2 px-4 pt-4 border-t mt-4">
-                <span className="text-sm text-muted-foreground">Tema:</span>
-                <ThemeToggle />
-              </div>
-            </nav>
-          </SheetContent>
-        </Sheet>
+          {/* Mobile Navigation */}
+          <Sheet open={open} onOpenChange={setOpen}>
+            <SheetTrigger asChild className="md:hidden">
+              <Button variant="ghost" size="icon" className="text-white hover:bg-primary/80">
+                <Menu className="h-6 w-6" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="right" className="w-[280px] pt-12">
+              <nav className="flex flex-col gap-2">
+                <NavItems mobile />
+                <div className="flex items-center gap-2 px-4 pt-4 border-t mt-4">
+                  <span className="text-sm text-muted-foreground">Tema:</span>
+                  <ThemeToggle />
+                </div>
+              </nav>
+            </SheetContent>
+          </Sheet>
+        </div>
       </div>
     </header>
   );
