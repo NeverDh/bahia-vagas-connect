@@ -16,39 +16,39 @@ export const Header = () => {
   const NavItems = ({ mobile = false }: { mobile?: boolean }) => (
     <>
       <Link to="/vagas" onClick={() => mobile && setOpen(false)}>
-        <Button variant="ghost" className={mobile ? "w-full justify-start" : ""}>Vagas</Button>
+        <Button variant="ghost" className={`text-orange-500 hover:text-orange-600 hover:bg-orange-50 ${mobile ? "w-full justify-start" : ""}`}>Vagas</Button>
       </Link>
       <Link to="/empresas" onClick={() => mobile && setOpen(false)}>
-        <Button variant="ghost" className={mobile ? "w-full justify-start" : ""}>Para Empresas</Button>
+        <Button variant="ghost" className={`text-orange-500 hover:text-orange-600 hover:bg-orange-50 ${mobile ? "w-full justify-start" : ""}`}>Para Empresas</Button>
       </Link>
       {user ? (
         <>
           {userRole === "candidate" && (
             <Link to="/perfil" onClick={() => mobile && setOpen(false)}>
-              <Button variant="ghost" className={mobile ? "w-full justify-start" : ""}>Meu Perfil</Button>
+              <Button variant="ghost" className={`text-orange-500 hover:text-orange-600 hover:bg-orange-50 ${mobile ? "w-full justify-start" : ""}`}>Meu Perfil</Button>
             </Link>
           )}
           {userRole === "company" && (
             <Link to="/empresa/dashboard" onClick={() => mobile && setOpen(false)}>
-              <Button variant="ghost" className={mobile ? "w-full justify-start" : ""}>Painel da Empresa</Button>
+              <Button variant="ghost" className={`text-orange-500 hover:text-orange-600 hover:bg-orange-50 ${mobile ? "w-full justify-start" : ""}`}>Painel da Empresa</Button>
             </Link>
           )}
           {isAdmin && (
             <Link to="/admin" onClick={() => mobile && setOpen(false)}>
-              <Button variant="ghost" className={mobile ? "w-full justify-start gap-2" : "gap-2"}>
+              <Button variant="ghost" className={`text-orange-500 hover:text-orange-600 hover:bg-orange-50 ${mobile ? "w-full justify-start gap-2" : "gap-2"}`}>
                 <Shield className="h-4 w-4" />
                 Admin
               </Button>
             </Link>
           )}
           {mobile && (
-            <span className="text-sm text-muted-foreground px-4 py-2">
+            <span className="text-sm text-orange-500 px-4 py-2">
               {userRole === "candidate" ? "Candidato" : "Empresa"}
             </span>
           )}
           <Button 
             variant="outline" 
-            className={mobile ? "w-full justify-start gap-2" : "gap-2"} 
+            className={`border-orange-500 text-orange-500 hover:bg-orange-50 ${mobile ? "w-full justify-start gap-2" : "gap-2"}`} 
             onClick={() => {
               signOut();
               mobile && setOpen(false);
@@ -60,7 +60,7 @@ export const Header = () => {
         </>
       ) : (
         <Link to="/auth" onClick={() => mobile && setOpen(false)}>
-          <Button variant="default" className={mobile ? "w-full gap-2" : "gap-2"}>
+          <Button className={`bg-orange-500 hover:bg-orange-600 text-white ${mobile ? "w-full gap-2" : "gap-2"}`}>
             <User className="h-4 w-4" />
             Entrar
           </Button>
@@ -70,8 +70,8 @@ export const Header = () => {
   );
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="flex h-16 items-center justify-between px-4 md:px-6 max-w-6xl mx-auto">
+    <header className="sticky top-0 z-50 w-full border-b border-border bg-primary">
+      <div className="flex h-16 items-center justify-between px-4 md:px-6 max-w-6xl mx-auto bg-background">
         <Link to="/" className="flex items-center">
           <img src={logo} alt="Bahia Vagas" className="h-[120px]" />
         </Link>
@@ -80,7 +80,7 @@ export const Header = () => {
         <nav className="hidden md:flex items-center gap-4">
           <NavItems />
           {user && (
-            <span className="text-sm text-muted-foreground">
+            <span className="text-sm text-orange-500">
               {userRole === "candidate" ? "Candidato" : "Empresa"}
             </span>
           )}
