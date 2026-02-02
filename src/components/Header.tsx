@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { Button } from "./ui/button";
-import { Briefcase, User, LogOut, Menu, Shield } from "lucide-react";
+import { User, LogOut, Menu, Shield } from "lucide-react";
+import logo from "@/assets/logo.png";
 import { useAuth } from "@/hooks/useAuth";
 import { useAdmin } from "@/hooks/useAdmin";
 import { useState } from "react";
@@ -71,11 +72,8 @@ export const Header = () => {
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="flex h-16 items-center justify-between px-4 md:px-6 max-w-6xl mx-auto">
-        <Link to="/" className="flex items-center gap-2 font-bold text-xl">
-          <Briefcase className="h-6 w-6 text-primary" />
-          <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-            Bahia Vagas
-          </span>
+        <Link to="/" className="flex items-center">
+          <img src={logo} alt="Bahia Vagas" className="h-10" />
         </Link>
         
         {/* Desktop Navigation */}
