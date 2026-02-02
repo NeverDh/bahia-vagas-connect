@@ -16,10 +16,10 @@ export const Header = () => {
   const NavItems = ({ mobile = false }: { mobile?: boolean }) => (
     <>
       <Link to="/vagas" onClick={() => mobile && setOpen(false)}>
-        <Button variant="ghost" className={`text-orange-500 hover:text-orange-600 hover:bg-orange-50 ${mobile ? "w-full justify-start" : ""}`}>Vagas</Button>
+        <Button variant="ghost" className={`text-white hover:text-white/80 hover:bg-primary/80 ${mobile ? "w-full justify-start text-orange-500 hover:text-orange-600 hover:bg-orange-50" : ""}`}>Vagas</Button>
       </Link>
       <Link to="/empresas" onClick={() => mobile && setOpen(false)}>
-        <Button variant="ghost" className={`text-orange-500 hover:text-orange-600 hover:bg-orange-50 ${mobile ? "w-full justify-start" : ""}`}>Para Empresas</Button>
+        <Button variant="ghost" className={`text-white hover:text-white/80 hover:bg-primary/80 ${mobile ? "w-full justify-start text-orange-500 hover:text-orange-600 hover:bg-orange-50" : ""}`}>Para Empresas</Button>
       </Link>
       {user ? (
         <>
