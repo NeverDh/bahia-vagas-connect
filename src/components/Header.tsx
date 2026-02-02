@@ -73,7 +73,7 @@ export const Header = () => {
     <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="flex h-16 items-center justify-between px-4 md:px-6 max-w-6xl mx-auto">
         <Link to="/" className="flex items-center">
-          <img src={logo} alt="Bahia Vagas" className="h-10" />
+          <img src={logo} alt="Bahia Vagas" className="h-[120px]" />
         </Link>
         
         {/* Desktop Navigation */}
