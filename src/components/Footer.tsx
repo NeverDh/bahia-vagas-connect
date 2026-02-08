@@ -9,7 +9,7 @@ export const Footer = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {/* Links Úteis */}
               <div>
-                <h4 className="font-semibold mb-4 text-white">Links Úteis</h4>
+                <h4 className="font-semibold mb-4 text-orange-400">Links Úteis</h4>
                 <ul className="space-y-2 text-sm">
                   <li>
                     <Link to="/vagas" className="text-white/80 hover:text-white transition-colors">
@@ -26,7 +26,7 @@ export const Footer = () => {
 
               {/* Para Empresas */}
               <div>
-                <h4 className="font-semibold mb-4 text-white">Para Empresas</h4>
+                <h4 className="font-semibold mb-4 text-orange-400">Para Empresas</h4>
                 <ul className="space-y-2 text-sm">
                   <li>
                     <a href="#" className="text-white/80 hover:text-white transition-colors">
@@ -53,7 +53,7 @@ export const Footer = () => {
 
               {/* Contato */}
               <div>
-                <h4 className="font-semibold mb-4 text-white">Contato</h4>
+                <h4 className="font-semibold mb-4 text-orange-400">Contato</h4>
                 <ul className="space-y-3 text-sm">
                   <li className="flex items-center gap-2 text-white/80">
                     <MapPin className="h-4 w-4 flex-shrink-0" />
