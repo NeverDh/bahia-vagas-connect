@@ -56,29 +56,29 @@ export const Footer = () => {
                 <h4 className="font-bold mb-4 text-orange-400">Contato</h4>
                 <ul className="space-y-3 text-sm">
                   <li className="flex items-center gap-2 text-white/80">
-                    <MapPin className="h-4 w-4 flex-shrink-0" />
+                    <MapPin className="h-4 w-4 flex-shrink-0 text-orange-400" />
                     <span>Av. Tancredo Neves, 1632 - Salvador, BA</span>
                   </li>
                   <li className="flex items-center gap-2 text-white/80">
-                    <Phone className="h-4 w-4 flex-shrink-0" />
+                    <Phone className="h-4 w-4 flex-shrink-0 text-orange-400" />
                     <span>(71) 3333-4444</span>
                   </li>
                   <li className="flex items-center gap-2 text-white/80">
-                    <Mail className="h-4 w-4 flex-shrink-0" />
+                    <Mail className="h-4 w-4 flex-shrink-0 text-orange-400" />
                     <span>contato@empregosbahia.com.br</span>
                   </li>
                 </ul>
                 <div className="flex gap-3 mt-4">
-                  <a href="#" className="text-white/80 hover:text-white transition-colors">
+                  <a href="#" className="text-orange-400 hover:text-orange-300 transition-colors">
                     <Facebook className="h-5 w-5" />
                   </a>
-                  <a href="#" className="text-white/80 hover:text-white transition-colors">
+                  <a href="#" className="text-orange-400 hover:text-orange-300 transition-colors">
                     <Instagram className="h-5 w-5" />
                   </a>
-                  <a href="#" className="text-white/80 hover:text-white transition-colors">
+                  <a href="#" className="text-orange-400 hover:text-orange-300 transition-colors">
                     <Linkedin className="h-5 w-5" />
                   </a>
-                  <a href="#" className="text-white/80 hover:text-white transition-colors">
+                  <a href="#" className="text-orange-400 hover:text-orange-300 transition-colors">
                     <Twitter className="h-5 w-5" />
                   </a>
                 </div>
