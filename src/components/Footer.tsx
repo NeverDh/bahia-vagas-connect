@@ -1,20 +1,10 @@
 import { Link } from "react-router-dom";
 import { Mail, Phone, MapPin, Facebook, Instagram, Linkedin, Twitter } from "lucide-react";
-import logo from "@/assets/logo.png";
 
 export const Footer = () => {
   return (
     <footer className="border-t border-border mt-12">
-      <div className="flex flex-col lg:flex-row">
-        {/* Left white area with logo */}
-        <div className="bg-background flex items-center justify-center lg:justify-start p-8 lg:pr-[10px] lg:pl-6">
-          <Link to="/" className="flex items-center">
-            <img src={logo} alt="Bahia Vagas" className="h-[100px]" />
-          </Link>
-        </div>
-        
-        {/* Right blue area */}
-        <div className="bg-primary flex-1 px-4 py-12 md:px-6">
+      <div className="bg-primary px-4 py-12 md:px-6">
           <div className="max-w-5xl mx-auto">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {/* Links Úteis */}
@@ -103,7 +93,6 @@ export const Footer = () => {
                 <Link to="/privacidade" className="hover:text-white transition-colors">Política de Privacidade</Link>
                 <a href="#" className="hover:text-white transition-colors">Cookies</a>
               </div>
-            </div>
           </div>
         </div>
       </div>
