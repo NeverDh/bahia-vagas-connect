@@ -25,7 +25,6 @@ interface JSearchJob {
   job_apply_link?: string;
 }
 
-// Map JSearch employment type to our contract_type enum
 function mapContractType(employmentType: string): string {
   const typeMap: Record<string, string> = {
     'FULLTIME': 'clt',
@@ -38,7 +37,6 @@ function mapContractType(employmentType: string): string {
   return typeMap[employmentType?.toUpperCase()] || 'clt';
 }
 
-// Map experience to our experience_level enum
 function mapExperienceLevel(experienceMonths: number | undefined): string {
   if (!experienceMonths || experienceMonths < 6) return 'intern';
   if (experienceMonths < 24) return 'junior';
@@ -47,7 +45,6 @@ function mapExperienceLevel(experienceMonths: number | undefined): string {
   return 'specialist';
 }
 
-// Extract category from job title
 function extractCategory(title: string): string {
   const categories: Record<string, string[]> = {
     'Tecnologia': ['desenvolvedor', 'developer', 'programador', 'software', 'tech', 'ti', 'dados', 'data', 'analista de sistemas', 'devops', 'frontend', 'backend', 'fullstack'],
@@ -71,8 +68,22 @@ function extractCategory(title: string): string {
   return 'Outros';
 }
 
+// All municipalities/cities of Bahia
+const bahiaCities = [
+  'Salvador', 'Feira de Santana', 'Vitória da Conquista', 'Camaçari', 'Itabuna',
+  'Juazeiro', 'Lauro de Freitas', 'Ilhéus', 'Jequié', 'Teixeira de Freitas',
+  'Alagoinhas', 'Barreiras', 'Porto Seguro', 'Simões Filho', 'Paulo Afonso',
+  'Eunápolis', 'Santo Antônio de Jesus', 'Valença', 'Candeias', 'Guanambi',
+  'Jacobina', 'Serrinha', 'Senhor do Bonfim', 'Dias d\'Ávila', 'Campo Formoso',
+  'Luís Eduardo Magalhães', 'Cruz das Almas', 'Brumado', 'Irecê', 'Itapetinga',
+  'Conceição do Coité', 'Mucuri', 'Santo Amaro', 'Itamaraju', 'Ribeira do Pombal',
+  'Bom Jesus da Lapa', 'Casa Nova', 'Madre de Deus', 'Catu', 'Tucano',
+  'Euclides da Cunha', 'Ipiaú', 'Itaberaba', 'Mata de São João', 'Cachoeira',
+  'São Sebastião do Passé', 'Conceição do Jacuípe', 'Entre Rios', 'Vera Cruz',
+  'Amélia Rodrigues'
+];
+
 serve(async (req) => {
-  // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
@@ -92,19 +103,72 @@ serve(async (req) => {
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    // Parse request body for options
-    let searchQueries = ['emprego', 'vaga', 'trabalho'];
-    let maxJobs = 50;
-    
+    // Pick a random city for this execution to spread across all cities over time
+    const cityIndex = Math.floor(Math.random() * bahiaCities.length);
+    const city = bahiaCities[cityIndex];
+
+    console.log(`Buscando vagas em: ${city}, Bahia`);
+
+    const allJobs: JSearchJob[] = [];
+
     try {
-      const body = await req.json();
-      if (body.searchQueries) searchQueries = body.searchQueries;
-      if (body.maxJobs) maxJobs = body.maxJobs;
-    } catch {
-      // Use defaults if no body
+      const searchUrl = `https://jsearch.p.rapidapi.com/search?query=${encodeURIComponent('vagas ' + city + ' Bahia Brasil')}&page=1&num_pages=3&country=br`;
+      
+      const response = await fetch(searchUrl, {
+        method: 'GET',
+        headers: {
+          'X-RapidAPI-Key': RAPIDAPI_KEY,
+          'X-RapidAPI-Host': 'jsearch.p.rapidapi.com',
+        },
+      });
+
+      if (!response.ok) {
+        const statusCode = response.status;
+        const statusText = response.statusText;
+        console.error(`Erro na API JSearch: ${statusCode} - ${statusText}`);
+        
+        // Check for quota exceeded (429 or 403)
+        if (statusCode === 429 || statusCode === 403) {
+          return new Response(
+            JSON.stringify({ 
+              success: false, 
+              error: 'QUOTA_EXCEEDED',
+              message: 'Limite de buscas da API atingido. Aguarde até o próximo ciclo de renovação do plano (mensal).'
+            }),
+            { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+        
+        throw new Error(`API retornou status ${statusCode}`);
+      }
+
+      const data = await response.json();
+      
+      if (data.data && Array.isArray(data.data)) {
+        // Filter to ensure jobs are in Bahia
+        const bahiaJobs = data.data.filter((job: JSearchJob) => {
+          const state = job.job_state?.toLowerCase() || '';
+          const jobCity = job.job_city?.toLowerCase() || '';
+          return state.includes('bahia') || state === 'ba' || 
+                 bahiaCities.some(c => jobCity.includes(c.toLowerCase()));
+        });
+        
+        allJobs.push(...bahiaJobs);
+      }
+    } catch (error) {
+      console.error(`Erro ao buscar vagas em ${city}:`, error);
+      throw error;
     }
 
-    console.log(`Buscando vagas na Bahia com queries: ${searchQueries.join(', ')}`);
+    console.log(`Total de vagas encontradas: ${allJobs.length}`);
+
+    // Remove duplicates by job_id
+    const uniqueJobs = allJobs.reduce((acc: JSearchJob[], job: JSearchJob) => {
+      if (!acc.find(j => j.job_id === job.job_id)) {
+        acc.push(job);
+      }
+      return acc;
+    }, []);
 
     // Get or create a default company for imported jobs
     let { data: defaultCompany } = await supabase
@@ -132,69 +196,11 @@ serve(async (req) => {
       defaultCompany = newCompany;
     }
 
-    const allJobs: any[] = [];
-    const bahiaCities = ['Salvador', 'Feira de Santana', 'Vitória da Conquista', 'Camaçari', 'Itabuna', 'Juazeiro', 'Lauro de Freitas', 'Ilhéus', 'Jequié', 'Teixeira de Freitas'];
-
-    // Search for jobs in Bahia cities
-    for (const query of searchQueries) {
-      for (const city of bahiaCities.slice(0, 3)) { // Limit to top 3 cities to avoid rate limits
-        try {
-          const searchUrl = `https://jsearch.p.rapidapi.com/search?query=${encodeURIComponent(query + ' ' + city + ' Bahia Brasil')}&page=1&num_pages=1&country=br`;
-          
-          console.log(`Buscando: ${query} em ${city}`);
-          
-          const response = await fetch(searchUrl, {
-            method: 'GET',
-            headers: {
-              'X-RapidAPI-Key': RAPIDAPI_KEY,
-              'X-RapidAPI-Host': 'jsearch.p.rapidapi.com',
-            },
-          });
-
-          if (!response.ok) {
-            console.error(`Erro na API JSearch: ${response.status} - ${response.statusText}`);
-            continue;
-          }
-
-          const data = await response.json();
-          
-          if (data.data && Array.isArray(data.data)) {
-            // Filter to ensure jobs are in Bahia
-            const bahiaJobs = data.data.filter((job: JSearchJob) => {
-              const state = job.job_state?.toLowerCase() || '';
-              const city = job.job_city?.toLowerCase() || '';
-              return state.includes('bahia') || state === 'ba' || 
-                     bahiaCities.some(c => city.includes(c.toLowerCase()));
-            });
-            
-            allJobs.push(...bahiaJobs);
-          }
-
-          // Small delay to avoid rate limiting
-          await new Promise(resolve => setTimeout(resolve, 500));
-        } catch (error) {
-          console.error(`Erro ao buscar ${query} em ${city}:`, error);
-        }
-      }
-
-      if (allJobs.length >= maxJobs) break;
-    }
-
-    console.log(`Total de vagas encontradas: ${allJobs.length}`);
-
-    // Remove duplicates by job_id
-    const uniqueJobs = allJobs.reduce((acc: JSearchJob[], job: JSearchJob) => {
-      if (!acc.find(j => j.job_id === job.job_id)) {
-        acc.push(job);
-      }
-      return acc;
-    }, []);
-
-    // Transform jobs
-    const jobsToInsert = uniqueJobs.slice(0, maxJobs).map((job: JSearchJob) => ({
+    // Transform ALL jobs (no limit)
+    const jobsToInsert = uniqueJobs.map((job: JSearchJob) => ({
       title: job.job_title,
       description: job.job_description || 'Descrição não disponível',
-      location: `${job.job_city || 'Salvador'}, ${job.job_state || 'Bahia'}`,
+      location: `${job.job_city || city}, ${job.job_state || 'Bahia'}`,
       company_id: defaultCompany.id,
       contract_type: mapContractType(job.job_employment_type),
       experience_level: mapExperienceLevel(job.job_required_experience?.required_experience_in_months),
@@ -210,8 +216,9 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ 
           success: true, 
-          message: 'Nenhuma vaga encontrada na Bahia',
-          imported: 0 
+          message: `Nenhuma vaga encontrada em ${city}`,
+          imported: 0,
+          city_searched: city,
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
@@ -239,7 +246,7 @@ serve(async (req) => {
       }
     }
 
-    // Also check by title + location to catch duplicates without external_url
+    // Also check by title + location
     const { data: existingByTitle } = await supabase
       .from('jobs')
       .select('title, location');
@@ -248,31 +255,22 @@ serve(async (req) => {
       (existingByTitle || []).map((j: { title: string; location: string }) => `${j.title}|${j.location}`)
     );
 
-    // Filter out jobs that already exist
     const newJobs = jobsToInsert.filter((job: { external_url: string | null; title: string; location: string }) => {
-      // Skip if external_url already exists
-      if (job.external_url && existingUrls.has(job.external_url)) {
-        console.log(`Vaga duplicada (URL): ${job.title}`);
-        return false;
-      }
-      // Skip if title + location already exists
-      if (existingTitleLocations.has(`${job.title}|${job.location}`)) {
-        console.log(`Vaga duplicada (título/local): ${job.title}`);
-        return false;
-      }
+      if (job.external_url && existingUrls.has(job.external_url)) return false;
+      if (existingTitleLocations.has(`${job.title}|${job.location}`)) return false;
       return true;
     });
 
     const skippedCount = jobsToInsert.length - newJobs.length;
-    console.log(`Vagas ignoradas (já existem): ${skippedCount}`);
 
     if (newJobs.length === 0) {
       return new Response(
         JSON.stringify({ 
           success: true, 
-          message: `Nenhuma vaga nova para importar (${skippedCount} já existiam)`,
+          message: `Nenhuma vaga nova em ${city} (${skippedCount} já existiam)`,
           imported: 0,
-          skipped: skippedCount
+          skipped: skippedCount,
+          city_searched: city,
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
@@ -293,10 +291,11 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         success: true, 
-        message: `${insertedJobs?.length || 0} vagas importadas com sucesso${skippedCount > 0 ? ` (${skippedCount} ignoradas por já existirem)` : ''}`,
+        message: `${insertedJobs?.length || 0} vagas importadas de ${city}${skippedCount > 0 ? ` (${skippedCount} ignoradas)` : ''}`,
         imported: insertedJobs?.length || 0,
         skipped: skippedCount,
-        total_found: uniqueJobs.length
+        total_found: uniqueJobs.length,
+        city_searched: city,
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
