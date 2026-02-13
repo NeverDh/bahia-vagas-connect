@@ -7,12 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Shield, Briefcase, Building2, Users, Download, Trash2, Plus, RefreshCw, AlertTriangle } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Shield, Briefcase, Building2, Users, Download, Trash2, RefreshCw, AlertTriangle, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { useAdmin } from "@/hooks/useAdmin";
@@ -41,15 +37,12 @@ const Admin = () => {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const { isAdmin, loading: adminLoading } = useAdmin();
-  const { importJobs, isImporting } = useImportJobs();
+  const { importJobs, isImporting, lastResult, quotaExceeded } = useImportJobs();
   
   const [jobs, setJobs] = useState<Job[]>([]);
   const [companies, setCompanies] = useState<Company[]>([]);
   const [stats, setStats] = useState({ jobs: 0, companies: 0, applications: 0, candidates: 0 });
   const [loadingData, setLoadingData] = useState(true);
-  const [importDialogOpen, setImportDialogOpen] = useState(false);
-  const [searchQueries, setSearchQueries] = useState("emprego, vaga, trabalho");
-  const [maxJobs, setMaxJobs] = useState("50");
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -96,11 +89,7 @@ const Admin = () => {
   };
 
   const handleImportJobs = async () => {
-    const queries = searchQueries.split(",").map(q => q.trim()).filter(Boolean);
-    const max = parseInt(maxJobs) || 50;
-    
-    await importJobs({ searchQueries: queries, maxJobs: max });
-    setImportDialogOpen(false);
+    await importJobs();
     fetchData();
   };
 
@@ -165,6 +154,18 @@ const Admin = () => {
               Atualizar
             </Button>
           </div>
+
+          {/* Quota Exceeded Alert */}
+          {quotaExceeded && (
+            <Alert variant="destructive">
+              <XCircle className="h-4 w-4" />
+              <AlertTitle>Limite de buscas atingido</AlertTitle>
+              <AlertDescription>
+                O limite mensal de 250 buscas da API foi atingido. A importação automática está pausada até a renovação do plano. 
+                As vagas existentes continuam disponíveis normalmente.
+              </AlertDescription>
+            </Alert>
+          )}
 
           {/* Stats Cards */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -332,40 +333,44 @@ const Admin = () => {
                     Importar Vagas da Bahia
                   </CardTitle>
                   <CardDescription>
-                    Importe vagas reais de APIs externas (JSearch/RapidAPI)
+                    Importação automática 8x ao dia. Cada execução busca vagas de uma cidade aleatória da Bahia.
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="searchQueries">Termos de busca (separados por vírgula)</Label>
-                    <Textarea
-                      id="searchQueries"
-                      value={searchQueries}
-                      onChange={(e) => setSearchQueries(e.target.value)}
-                      placeholder="emprego, vaga, trabalho, desenvolvedor..."
-                    />
+                  {quotaExceeded && (
+                    <Alert variant="destructive">
+                      <XCircle className="h-4 w-4" />
+                      <AlertTitle>Limite mensal atingido</AlertTitle>
+                      <AlertDescription>
+                        As 250 buscas mensais da API foram esgotadas. A importação será retomada automaticamente quando o plano renovar.
+                      </AlertDescription>
+                    </Alert>
+                  )}
+
+                  <div className="bg-muted/50 p-4 rounded-lg space-y-2">
+                    <p className="font-medium text-sm">Configuração atual:</p>
+                    <ul className="text-sm text-muted-foreground space-y-1">
+                      <li>• <strong>Frequência:</strong> 8 vezes por dia (a cada 3 horas)</li>
+                      <li>• <strong>Cobertura:</strong> Todas as cidades da Bahia (50+ municípios)</li>
+                      <li>• <strong>Limite mensal:</strong> 250 buscas/mês</li>
+                      <li>• <strong>Sem filtro de cargo:</strong> Busca genérica "vagas [cidade] Bahia"</li>
+                      <li>• <strong>Sem limite de vagas:</strong> Importa todas as vagas encontradas</li>
+                    </ul>
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="maxJobs">Número máximo de vagas</Label>
-                    <Input
-                      id="maxJobs"
-                      type="number"
-                      value={maxJobs}
-                      onChange={(e) => setMaxJobs(e.target.value)}
-                      min="1"
-                      max="100"
-                    />
-                  </div>
-                  <div className="bg-muted/50 p-4 rounded-lg flex items-start gap-3">
-                    <AlertTriangle className="h-5 w-5 text-yellow-500 mt-0.5" />
-                    <div className="text-sm text-muted-foreground">
-                      <p className="font-medium text-foreground">Atenção</p>
-                      <p>A importação busca vagas em cidades da Bahia e pode demorar alguns segundos. As vagas importadas terão link para o site original.</p>
+
+                  {lastResult && (
+                    <div className="p-3 rounded-lg bg-muted text-sm">
+                      <p className="font-medium">Última importação:</p>
+                      <p className="text-muted-foreground">{lastResult.message}</p>
+                      {lastResult.city_searched && (
+                        <p className="text-muted-foreground">Cidade buscada: {lastResult.city_searched}</p>
+                      )}
                     </div>
-                  </div>
+                  )}
+
                   <Button 
                     onClick={handleImportJobs} 
-                    disabled={isImporting}
+                    disabled={isImporting || quotaExceeded}
                     className="w-full"
                   >
                     {isImporting ? (
@@ -376,7 +381,7 @@ const Admin = () => {
                     ) : (
                       <>
                         <Download className="h-4 w-4 mr-2" />
-                        Importar Vagas
+                        Importar Vagas Manualmente
                       </>
                     )}
                   </Button>
