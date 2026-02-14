@@ -15,6 +15,7 @@ import Admin from "./pages/Admin";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import NotFound from "./pages/NotFound";
 import JobsByCity from "./pages/JobsByCity";
+import { bahiaMunicipios } from "./lib/bahia-municipios";
 
 const queryClient = new QueryClient();
 
@@ -28,7 +29,9 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/vagas" element={<Jobs />} />
-            <Route path="/vagas-:slug" element={<JobsByCity />} />
+            {Object.entries(bahiaMunicipios).map(([slug, name]) => (
+              <Route key={slug} path={`/vagas-${slug}`} element={<JobsByCity cityName={name} />} />
+            ))}
             <Route path="/vaga/:id" element={<JobDetails />} />
             <Route path="/empresas" element={<Companies />} />
             <Route path="/perfil" element={<Profile />} />
