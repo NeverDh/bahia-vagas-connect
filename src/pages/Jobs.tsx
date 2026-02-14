@@ -13,7 +13,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 
-const Jobs = () => {
+interface JobsProps {
+  initialLocation?: string;
+}
+
+const Jobs = ({ initialLocation }: JobsProps = {}) => {
   const [jobs, setJobs] = useState<any[]>([]);
   const [totalJobs, setTotalJobs] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -30,7 +34,7 @@ const Jobs = () => {
     contractTypes: [] as string[],
     experienceLevels: [] as string[],
     remoteOnly: false,
-    location: "",
+    location: initialLocation || "",
     sortOrder: "newest" as "newest" | "oldest"
   });
 

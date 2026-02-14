@@ -14,6 +14,7 @@ import CompanyDashboard from "./pages/CompanyDashboard";
 import Admin from "./pages/Admin";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import NotFound from "./pages/NotFound";
+import JobsByCity from "./pages/JobsByCity";
 
 const queryClient = new QueryClient();
 
@@ -27,6 +28,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/vagas" element={<Jobs />} />
+            <Route path="/vagas-salvador" element={<JobsByCity />} />
             <Route path="/vaga/:id" element={<JobDetails />} />
             <Route path="/empresas" element={<Companies />} />
             <Route path="/perfil" element={<Profile />} />
