@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Shield, Briefcase, Building2, Users, Download, Trash2, RefreshCw, AlertTriangle, XCircle } from "lucide-react";
+import { AdminMetaTags } from "@/components/AdminMetaTags";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { useAdmin } from "@/hooks/useAdmin";
@@ -221,6 +222,7 @@ const Admin = () => {
               <TabsTrigger value="jobs">Vagas</TabsTrigger>
               <TabsTrigger value="companies">Empresas</TabsTrigger>
               <TabsTrigger value="import">Importar Vagas</TabsTrigger>
+              <TabsTrigger value="metatags">Meta Tags</TabsTrigger>
             </TabsList>
 
             <TabsContent value="jobs" className="space-y-4">
@@ -387,6 +389,10 @@ const Admin = () => {
                   </Button>
                 </CardContent>
               </Card>
+            </TabsContent>
+
+            <TabsContent value="metatags">
+              <AdminMetaTags />
             </TabsContent>
           </Tabs>
         </div>
