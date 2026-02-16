@@ -427,3 +427,7 @@ export function getMunicipioBySlug(slug: string): string | undefined {
 export function getAllSlugs(): string[] {
   return Object.keys(bahiaMunicipios);
 }
+
+export function getSlugByMunicipio(name: string): string | undefined {
+  return Object.entries(bahiaMunicipios).find(([, v]) => v === name)?.[0];
+}

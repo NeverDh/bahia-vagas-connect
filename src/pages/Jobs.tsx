@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { MainLayout } from "@/components/MainLayout";
 import { JobCard } from "@/components/JobCard";
 import { JobFilters } from "@/components/JobFilters";
@@ -12,6 +13,7 @@ import { Search, SlidersHorizontal, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { getSlugByMunicipio } from "@/lib/bahia-municipios";
 
 interface JobsProps {
   initialLocation?: string;
@@ -29,6 +31,7 @@ const Jobs = ({ initialLocation }: JobsProps = {}) => {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const { toast } = useToast();
   const { user, userRole } = useAuth();
+  const navigate = useNavigate();
   
   const [filters, setFilters] = useState({
     contractTypes: [] as string[],
@@ -47,6 +50,18 @@ const Jobs = ({ initialLocation }: JobsProps = {}) => {
   useEffect(() => {
     setCurrentPage(1);
   }, [filters, searchTerm]);
+
+  // Update URL when location filter changes
+  useEffect(() => {
+    if (filters.location) {
+      const slug = getSlugByMunicipio(filters.location);
+      if (slug) {
+        navigate(`/vagas-${slug}`, { replace: true });
+      }
+    } else if (!initialLocation) {
+      navigate("/vagas", { replace: true });
+    }
+  }, [filters.location, navigate, initialLocation]);
 
   useEffect(() => {
     fetchJobs();
