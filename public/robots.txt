@@ -13,4 +13,4 @@ Allow: /
 User-agent: *
 Allow: /
 
-Sitemap: https://bahia-vagas-connect.lovable.app/sitemap.xml
+Sitemap: https://amulcuaokredqksqokvp.supabase.co/functions/v1/sitemap

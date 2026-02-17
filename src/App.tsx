@@ -15,6 +15,7 @@ import Admin from "./pages/Admin";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import NotFound from "./pages/NotFound";
 import JobsByCity from "./pages/JobsByCity";
+import SiteUrls from "./pages/SiteUrls";
 import { bahiaMunicipios } from "./lib/bahia-municipios";
 import { useMetaTags } from "./hooks/useMetaTags";
 
@@ -45,6 +46,7 @@ const App = () => (
               <Route path="/empresa/dashboard" element={<CompanyDashboard />} />
               <Route path="/admin" element={<Admin />} />
               <Route path="/auth" element={<Auth />} />
+              <Route path="/urls" element={<SiteUrls />} />
               <Route path="/privacidade" element={<PrivacyPolicy />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
