@@ -49,11 +49,18 @@ export const useAuth = () => {
     const { data, error } = await supabase
       .from("user_roles")
       .select("role")
-      .eq("user_id", userId)
-      .single();
+      .eq("user_id", userId);
 
-    if (data && !error) {
-      setUserRole(data.role as UserRole);
+    if (data && !error && data.length > 0) {
+      // Prioritize: admin > company > candidate
+      const roles = data.map(d => d.role as string);
+      if (roles.includes("admin")) {
+        // Check for company or candidate role as the "functional" role
+        const functionalRole = roles.find(r => r === "company" || r === "candidate");
+        setUserRole((functionalRole || "candidate") as UserRole);
+      } else {
+        setUserRole(data[0].role as UserRole);
+      }
     }
   };
 
