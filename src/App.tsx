@@ -18,6 +18,7 @@ import JobsByCity from "./pages/JobsByCity";
 import SiteUrls from "./pages/SiteUrls";
 import { bahiaMunicipios } from "./lib/bahia-municipios";
 import { useMetaTags } from "./hooks/useMetaTags";
+import { CookieConsent } from "./components/CookieConsent";
 
 const MetaTagsProvider = ({ children }: { children: React.ReactNode }) => {
   useMetaTags();
@@ -32,6 +33,7 @@ const App = () => (
       <TooltipProvider>
         <Toaster />
         <Sonner />
+        <CookieConsent />
         <BrowserRouter>
           <MetaTagsProvider>
             <Routes>
