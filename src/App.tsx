@@ -16,9 +16,11 @@ import PrivacyPolicy from "./pages/PrivacyPolicy";
 import NotFound from "./pages/NotFound";
 import JobsByCity from "./pages/JobsByCity";
 import SiteUrls from "./pages/SiteUrls";
+import CookiesNecessarios from "./pages/CookiesNecessarios";
 import { bahiaMunicipios } from "./lib/bahia-municipios";
 import { useMetaTags } from "./hooks/useMetaTags";
 import { CookieConsent } from "./components/CookieConsent";
+import { CookieGuard } from "./components/CookieGuard";
 
 const MetaTagsProvider = ({ children }: { children: React.ReactNode }) => {
   useMetaTags();
@@ -35,25 +37,28 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <CookieConsent />
-          <MetaTagsProvider>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/vagas" element={<Jobs />} />
-              {Object.entries(bahiaMunicipios).map(([slug, name]) => (
-                <Route key={slug} path={`/vagas-${slug}`} element={<JobsByCity cityName={name} />} />
-              ))}
-              <Route path="/vaga/:id" element={<JobDetails />} />
-              <Route path="/empresas" element={<Companies />} />
-              <Route path="/perfil" element={<Profile />} />
-              <Route path="/empresa/dashboard" element={<CompanyDashboard />} />
-              <Route path="/admin" element={<Admin />} />
-              <Route path="/auth" element={<Auth />} />
-              <Route path="/urls" element={<SiteUrls />} />
-              <Route path="/privacidade" element={<PrivacyPolicy />} />
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </MetaTagsProvider>
+          <CookieGuard>
+            <MetaTagsProvider>
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/vagas" element={<Jobs />} />
+                {Object.entries(bahiaMunicipios).map(([slug, name]) => (
+                  <Route key={slug} path={`/vagas-${slug}`} element={<JobsByCity cityName={name} />} />
+                ))}
+                <Route path="/vaga/:id" element={<JobDetails />} />
+                <Route path="/empresas" element={<Companies />} />
+                <Route path="/perfil" element={<Profile />} />
+                <Route path="/empresa/dashboard" element={<CompanyDashboard />} />
+                <Route path="/admin" element={<Admin />} />
+                <Route path="/auth" element={<Auth />} />
+                <Route path="/urls" element={<SiteUrls />} />
+                <Route path="/privacidade" element={<PrivacyPolicy />} />
+                <Route path="/cookies-necessarios" element={<CookiesNecessarios />} />
+                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </MetaTagsProvider>
+          </CookieGuard>
         </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>

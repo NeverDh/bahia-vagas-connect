@@ -1,13 +1,14 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Cookie, X, ChevronDown, ChevronUp } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const COOKIE_KEY = "bahia-vagas-cookie-consent";
 
 export const CookieConsent = () => {
   const [visible, setVisible] = useState(false);
   const [expanded, setExpanded] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const consent = localStorage.getItem(COOKIE_KEY);
@@ -31,6 +32,7 @@ export const CookieConsent = () => {
   const handleReject = () => {
     localStorage.setItem(COOKIE_KEY, "rejected");
     setVisible(false);
+    navigate("/cookies-necessarios", { replace: true });
   };
 
   if (!visible) return null;
