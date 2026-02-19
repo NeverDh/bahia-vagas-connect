@@ -4,8 +4,9 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { ExternalLink, Search, Globe, MapPin, Building2, FileText } from "lucide-react";
 import { bahiaMunicipios } from "@/lib/bahia-municipios";
-import { useState, useMemo } from "react";
-import { Link } from "react-router-dom";
+import { useState, useMemo, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useAdmin } from "@/hooks/useAdmin";
 
 interface SiteUrl {
   path: string;
@@ -14,6 +15,8 @@ interface SiteUrl {
 }
 
 const SiteUrls = () => {
+  const { isAdmin, loading } = useAdmin();
+  const navigate = useNavigate();
   const [search, setSearch] = useState("");
 
   const allUrls = useMemo<SiteUrl[]>(() => {
@@ -52,6 +55,24 @@ const SiteUrls = () => {
     institucional: filtered.filter((u) => u.category === "institucional"),
     municipio: filtered.filter((u) => u.category === "municipio"),
   }), [filtered]);
+
+  useEffect(() => {
+    if (!loading && !isAdmin) {
+      navigate("/", { replace: true });
+    }
+  }, [isAdmin, loading, navigate]);
+
+  if (loading) {
+    return (
+      <MainLayout>
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <p className="text-muted-foreground">Carregando...</p>
+        </div>
+      </MainLayout>
+    );
+  }
+
+  if (!isAdmin) return null;
 
   const categoryIcon = {
     principal: <Globe className="h-5 w-5" />,
