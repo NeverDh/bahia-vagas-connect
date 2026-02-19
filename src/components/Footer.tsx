@@ -89,7 +89,7 @@ export const Footer = () => {
             <div className="border-t border-white/20 mt-8 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-white/80">
               <p>© 2024 EmpregosBahia. Todos os direitos reservados.</p>
               <div className="flex gap-6">
-                <a href="#" className="hover:text-white transition-colors">Termos de Uso</a>
+                <Link to="/termos-de-uso" className="hover:text-white transition-colors">Termos de Uso</Link>
                 <Link to="/privacidade" className="hover:text-white transition-colors">Política de Privacidade</Link>
                 <a href="#" className="hover:text-white transition-colors">Cookies</a>
               </div>

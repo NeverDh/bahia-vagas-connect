@@ -17,6 +17,7 @@ import NotFound from "./pages/NotFound";
 import JobsByCity from "./pages/JobsByCity";
 import SiteUrls from "./pages/SiteUrls";
 import CookiesNecessarios from "./pages/CookiesNecessarios";
+import TermosDeUso from "./pages/TermosDeUso";
 import { bahiaMunicipios } from "./lib/bahia-municipios";
 import { useMetaTags } from "./hooks/useMetaTags";
 import { CookieConsent } from "./components/CookieConsent";
@@ -54,6 +55,7 @@ const App = () => (
                 <Route path="/urls" element={<SiteUrls />} />
                 <Route path="/privacidade" element={<PrivacyPolicy />} />
                 <Route path="/cookies-necessarios" element={<CookiesNecessarios />} />
+                <Route path="/termos-de-uso" element={<TermosDeUso />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
