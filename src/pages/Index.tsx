@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, Briefcase, Users, TrendingUp, MapPin } from "lucide-react";
 import { Link } from "react-router-dom";
+import { RecentJobsByCity } from "@/components/RecentJobsByCity";
 
 const Index = () => {
   return (
@@ -89,6 +90,9 @@ const Index = () => {
           </div>
         </div>
       </section>
+
+      {/* Recent Jobs by City */}
+      <RecentJobsByCity />
 
       {/* CTA Section */}
       <section className="py-20">
