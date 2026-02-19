@@ -95,8 +95,9 @@ export const RecentJobsByCity = () => {
   return (
     <section className="py-16">
       <div className="container px-4">
-        <h2 className="text-2xl md:text-3xl font-bold text-center mb-10 text-foreground">
-          Vagas Recentes por Cidade
+        <h2 className="text-2xl md:text-3xl font-bold text-center mb-10">
+          <span className="text-primary">Vagas </span>
+          <span className="text-orange-500">Mais Recentes</span>
         </h2>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
