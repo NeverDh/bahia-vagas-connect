@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 
 interface AdBannerProps {
   variant?: "vertical" | "horizontal";
@@ -17,37 +17,41 @@ export const AdBanner = ({
   className = "",
   slot = "auto",
 }: AdBannerProps) => {
+  const adRef = useRef<HTMLDivElement>(null);
+  const [adLoaded, setAdLoaded] = useState(false);
+
   useEffect(() => {
     try {
       (window.adsbygoogle = window.adsbygoogle || []).push({});
     } catch (e) {
       // AdSense não carregado ainda
     }
+
+    // Check if ad actually rendered content
+    const timer = setTimeout(() => {
+      if (adRef.current) {
+        const ins = adRef.current.querySelector("ins.adsbygoogle");
+        if (ins && (ins as HTMLElement).offsetHeight > 0) {
+          setAdLoaded(true);
+        }
+      }
+    }, 2000);
+
+    return () => clearTimeout(timer);
   }, []);
 
-  if (variant === "horizontal") {
-    return (
-      <div className={`w-full overflow-hidden ${className}`}>
-        <ins
-          className="adsbygoogle"
-          style={{ display: "block" }}
-          data-ad-client="ca-pub-2730201613244052"
-          data-ad-slot={slot}
-          data-ad-format="horizontal"
-          data-full-width-responsive="true"
-        />
-      </div>
-    );
-  }
-
   return (
-    <div className={`w-full overflow-hidden ${className}`}>
+    <div
+      ref={adRef}
+      className={`w-full overflow-hidden ${!adLoaded ? "h-0 min-h-0" : ""} ${className}`}
+      style={{ minHeight: 0 }}
+    >
       <ins
         className="adsbygoogle"
         style={{ display: "block" }}
         data-ad-client="ca-pub-2730201613244052"
         data-ad-slot={slot}
-        data-ad-format="vertical"
+        data-ad-format={variant === "horizontal" ? "horizontal" : "vertical"}
         data-full-width-responsive="true"
       />
     </div>
