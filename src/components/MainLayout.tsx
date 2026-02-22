@@ -13,13 +13,9 @@ export const MainLayout = ({ children, showAds = true }: MainLayoutProps) => {
     <div className="min-h-screen bg-background flex flex-col">
       <Header />
 
-      {/* Header Ad Banner */}
+      {/* Header Ad Banner - collapses to zero height if ad doesn't load */}
       {showAds && (
-        <div className="w-full border-b border-border bg-muted/30">
-          <div className="max-w-6xl mx-auto px-4 py-1">
-            <AdBanner variant="horizontal" slot="auto" />
-          </div>
-        </div>
+        <AdBanner variant="horizontal" slot="auto" className="max-w-6xl mx-auto" />
       )}
 
       <div className="flex justify-center flex-1">

@@ -40,11 +40,28 @@ export const AdBanner = ({
     return () => clearTimeout(timer);
   }, []);
 
+  if (!adLoaded) {
+    return (
+      <div
+        ref={adRef}
+        style={{ height: 0, overflow: "hidden", margin: 0, padding: 0 }}
+      >
+        <ins
+          className="adsbygoogle"
+          style={{ display: "block" }}
+          data-ad-client="ca-pub-2730201613244052"
+          data-ad-slot={slot}
+          data-ad-format={variant === "horizontal" ? "horizontal" : "vertical"}
+          data-full-width-responsive="true"
+        />
+      </div>
+    );
+  }
+
   return (
     <div
       ref={adRef}
-      className={`w-full overflow-hidden ${!adLoaded ? "h-0 min-h-0" : ""} ${className}`}
-      style={{ minHeight: 0 }}
+      className={`w-full overflow-hidden ${className}`}
     >
       <ins
         className="adsbygoogle"
