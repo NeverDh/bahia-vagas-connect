@@ -10,8 +10,8 @@ const Index = () => {
     <MainLayout>
       
       {/* Hero Section */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-primary/5 via-background to-accent/5">
-        <div className="container px-4 py-20 md:py-32">
+      <section className="relative overflow-hidden bg-gradient-to-br from-primary/5 via-background to-accent/5 mt-0 pt-0">
+        <div className="container px-4 py-16 md:py-28">
           <div className="max-w-3xl mx-auto text-center space-y-8">
             <h1 className="text-4xl md:text-6xl font-bold leading-tight">
               Encontre sua próxima{" "}
