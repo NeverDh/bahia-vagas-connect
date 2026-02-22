@@ -1,0 +1,21 @@
+{
+  "name": "Bahia Vagas",
+  "short_name": "Bahia Vagas",
+  "description": "Encontre as melhores vagas de emprego na Bahia",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#2563eb",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "16x16 32x32 48x48",
+      "type": "image/x-icon"
+    },
+    {
+      "src": "/favicon.jpg",
+      "sizes": "180x180",
+      "type": "image/jpeg"
+    }
+  ]
+}
