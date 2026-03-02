@@ -39,6 +39,20 @@ export const MainLayout = ({ children, showAds = true }: MainLayoutProps) => {
         )}
       </div>
 
+      {/* Footer Ad Banner - visible on all devices */}
+      {showAds && (
+        <div className="w-full max-w-6xl mx-auto px-4 py-4">
+          <AdBanner variant="horizontal" slot="auto" />
+        </div>
+      )}
+
+      {/* Mobile sticky bottom ad */}
+      {showAds && (
+        <div className="xl:hidden fixed bottom-0 left-0 right-0 z-40 bg-background border-t border-border">
+          <AdBanner variant="horizontal" slot="auto" />
+        </div>
+      )}
+
       <Footer />
     </div>
   );
