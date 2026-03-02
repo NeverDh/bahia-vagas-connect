@@ -147,6 +147,8 @@ serve(async () => {
     { loc: "/urls", changefreq: "weekly", priority: "0.5" },
     { loc: "/auth", changefreq: "monthly", priority: "0.3" },
     { loc: "/privacidade", changefreq: "monthly", priority: "0.2" },
+    { loc: "/termos-de-uso", changefreq: "monthly", priority: "0.2" },
+    { loc: "/cookies-necessarios", changefreq: "monthly", priority: "0.1" },
   ];
 
   const municipioUrls = Object.keys(bahiaMunicipios).map((slug) => ({
