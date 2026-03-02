@@ -29,24 +29,14 @@ export const Footer = () => {
                 <h4 className="font-bold mb-4 text-orange-400">Para Empresas</h4>
                 <ul className="space-y-2 text-sm">
                   <li>
-                    <a href="#" className="text-white/80 hover:text-white transition-colors">
+                    <Link to="/auth" className="text-white/80 hover:text-white transition-colors">
                       Anunciar Vagas
-                    </a>
+                    </Link>
                   </li>
                   <li>
-                    <a href="#" className="text-white/80 hover:text-white transition-colors">
-                      Planos e Preços
-                    </a>
-                  </li>
-                  <li>
-                    <a href="#" className="text-white/80 hover:text-white transition-colors">
-                      Buscar Candidatos
-                    </a>
-                  </li>
-                  <li>
-                    <a href="#" className="text-white/80 hover:text-white transition-colors">
-                      Soluções Corporativas
-                    </a>
+                    <Link to="/empresas" className="text-white/80 hover:text-white transition-colors">
+                      Soluções para Empresas
+                    </Link>
                   </li>
                 </ul>
               </div>
@@ -65,7 +55,7 @@ export const Footer = () => {
                   </li>
                   <li className="flex items-center gap-2 text-white/80">
                     <Mail className="h-4 w-4 flex-shrink-0 text-orange-400" />
-                    <span>contato@empregosbahia.com.br</span>
+                    <span>contato@bahiavagas.com</span>
                   </li>
                 </ul>
                 <div className="flex gap-3 mt-4">
@@ -87,11 +77,11 @@ export const Footer = () => {
 
             {/* Bottom */}
             <div className="border-t border-white/20 mt-8 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-white/80">
-              <p>© 2024 EmpregosBahia. Todos os direitos reservados.</p>
+              <p>© {new Date().getFullYear()} Bahia Vagas. Todos os direitos reservados.</p>
               <div className="flex gap-6">
                 <Link to="/termos-de-uso" className="hover:text-white transition-colors">Termos de Uso</Link>
                 <Link to="/privacidade" className="hover:text-white transition-colors">Política de Privacidade</Link>
-                <a href="#" className="hover:text-white transition-colors">Cookies</a>
+                <Link to="/cookies-necessarios" className="hover:text-white transition-colors">Cookies</Link>
               </div>
           </div>
         </div>

@@ -33,7 +33,25 @@ export const useMetaTags = () => {
       if (data.og_description) setMeta("og:description", data.og_description, "property");
       if (data.og_image) setMeta("og:image", data.og_image, "property");
       setMeta("og:type", "website", "property");
+
+      // Canonical tag
+      let canonical = document.querySelector('link[rel="canonical"]') as HTMLLinkElement | null;
+      if (!canonical) {
+        canonical = document.createElement("link");
+        canonical.setAttribute("rel", "canonical");
+        document.head.appendChild(canonical);
+      }
+      canonical.setAttribute("href", `https://bahia-vagas-connect.lovable.app${location.pathname}`);
     };
+
+    // Always set canonical, even without meta_tags data
+    let canonical = document.querySelector('link[rel="canonical"]') as HTMLLinkElement | null;
+    if (!canonical) {
+      canonical = document.createElement("link");
+      canonical.setAttribute("rel", "canonical");
+      document.head.appendChild(canonical);
+    }
+    canonical.setAttribute("href", `https://bahia-vagas-connect.lovable.app${location.pathname}`);
 
     applyMetaTags();
   }, [location.pathname]);
