@@ -13,6 +13,7 @@ import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { ApplicationForm } from "@/components/ApplicationForm";
+import { AdBanner } from "@/components/AdBanner";
 
 const contractTypeLabels: Record<string, string> = {
   clt: "CLT",
@@ -394,6 +395,11 @@ const JobDetails = () => {
               </div>
             </CardContent>
           </Card>
+
+          {/* Ad after job details - visible on all devices */}
+          <div className="py-4">
+            <AdBanner variant="horizontal" slot="auto" />
+          </div>
           
           {/* Spacer for mobile ad banner */}
           <div className="h-24 xl:hidden" />

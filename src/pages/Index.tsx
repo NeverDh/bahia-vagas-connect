@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Search, Briefcase, Users, TrendingUp, MapPin } from "lucide-react";
 import { Link } from "react-router-dom";
 import { RecentJobsByCity } from "@/components/RecentJobsByCity";
+import { AdBanner } from "@/components/AdBanner";
 
 const Index = () => {
   return (
@@ -54,6 +55,11 @@ const Index = () => {
         <div className="absolute bottom-20 right-10 w-96 h-96 bg-accent/10 rounded-full blur-3xl"></div>
       </section>
 
+      {/* Ad between hero and stats - all devices */}
+      <div className="container px-4 py-4">
+        <AdBanner variant="horizontal" slot="auto" className="max-w-4xl mx-auto" />
+      </div>
+
       {/* Stats Section */}
       <section className="py-16 border-y border-border">
         <div className="container px-4">
@@ -93,6 +99,11 @@ const Index = () => {
 
       {/* Recent Jobs by City */}
       <RecentJobsByCity />
+
+      {/* Ad between jobs and CTA - visible on all devices */}
+      <div className="container px-4 py-4">
+        <AdBanner variant="horizontal" slot="auto" className="max-w-4xl mx-auto" />
+      </div>
 
       {/* CTA Section */}
       <section className="py-20">
