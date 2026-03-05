@@ -6,21 +6,26 @@ export const useAdmin = () => {
   const { user, loading: authLoading } = useAuth();
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [checkedUserId, setCheckedUserId] = useState<string | null>(null);
 
   useEffect(() => {
-    // Wait for auth to finish loading
     if (authLoading) {
-      setLoading(true);
+      return;
+    }
+
+    if (!user) {
+      setIsAdmin(false);
+      setLoading(false);
+      setCheckedUserId(null);
+      return;
+    }
+
+    // Skip re-check if we already verified this user
+    if (checkedUserId === user.id) {
       return;
     }
 
     const checkAdminRole = async () => {
-      if (!user) {
-        setIsAdmin(false);
-        setLoading(false);
-        return;
-      }
-
       setLoading(true);
       try {
         const { data, error } = await supabase.rpc("has_role", {
@@ -34,6 +39,7 @@ export const useAdmin = () => {
         } else {
           setIsAdmin(data === true);
         }
+        setCheckedUserId(user.id);
       } catch (error) {
         console.error("Error checking admin role:", error);
         setIsAdmin(false);
@@ -43,7 +49,7 @@ export const useAdmin = () => {
     };
 
     checkAdminRole();
-  }, [user, authLoading]);
+  }, [user, authLoading, checkedUserId]);
 
   return { isAdmin, loading };
 };
