@@ -1,10 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { MainLayout } from '@/components/MainLayout';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Calendar, User, ArrowLeft, Share2, Clock } from 'lucide-react';
+import { Calendar, User, ArrowLeft, Share2, Clock, ChevronRight, ChevronUp } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { toast } from 'sonner';
@@ -35,6 +35,7 @@ const BlogPost = () => {
   const [post, setPost] = useState<Post | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  const [tocOpen, setTocOpen] = useState(true);
 
   useEffect(() => {
     if (slug) fetchPost(slug);
@@ -51,9 +52,7 @@ const BlogPost = () => {
 
     if (data) {
       setPost(data);
-      // Increment views
       supabase.from('blog_posts').update({ views: (data.views || 0) + 1 }).eq('id', data.id).then();
-      // Set meta tags
       document.title = data.meta_title || data.title;
       setMetaTag('description', data.meta_description || data.excerpt || '');
       setMetaTag('og:title', data.og_title || data.title);
@@ -92,16 +91,45 @@ const BlogPost = () => {
     return Math.max(1, Math.ceil(words / 200));
   };
 
+  // Extract headings from content for TOC
+  const headings = useMemo(() => {
+    if (!post) return [];
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(post.content, 'text/html');
+    const elements = doc.querySelectorAll('h1, h2, h3');
+    return Array.from(elements).map((el, i) => ({
+      id: `heading-${i}`,
+      text: el.textContent || '',
+      level: el.tagName,
+    }));
+  }, [post]);
+
+  // Inject IDs into content headings
+  const processedContent = useMemo(() => {
+    if (!post) return '';
+    let idx = 0;
+    return post.content.replace(/<(h[1-3])([^>]*)>/gi, (match, tag, attrs) => {
+      const id = `heading-${idx}`;
+      idx++;
+      return `<${tag}${attrs} id="${id}">`;
+    });
+  }, [post]);
+
+  const scrollToHeading = (id: string) => {
+    const el = document.getElementById(id);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
   if (loading) {
     return (
       <MainLayout>
-        <div className="max-w-4xl mx-auto px-4 py-12 animate-pulse space-y-6">
-          <div className="h-8 bg-muted rounded w-3/4" />
-          <div className="h-64 bg-muted rounded" />
-          <div className="space-y-3">
+        <div className="animate-pulse">
+          <div className="h-[340px] bg-primary/80" />
+          <div className="max-w-6xl mx-auto px-4 py-8 space-y-6">
+            <div className="h-4 bg-muted rounded w-1/2" />
+            <div className="h-6 bg-muted rounded w-3/4" />
             <div className="h-4 bg-muted rounded" />
             <div className="h-4 bg-muted rounded w-5/6" />
-            <div className="h-4 bg-muted rounded w-2/3" />
           </div>
         </div>
       </MainLayout>
@@ -139,51 +167,122 @@ const BlogPost = () => {
         }}
       />
 
-      <article className="max-w-4xl mx-auto px-4 py-8">
-        {/* Back link */}
-        <Link to="/blog" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-primary mb-6">
-          <ArrowLeft className="h-4 w-4" /> Voltar ao Blog
-        </Link>
-
-        {/* Header */}
-        <header className="mb-8">
-          {post.category && <Badge className="mb-3">{post.category}</Badge>}
-          <h1 className="text-3xl md:text-4xl font-bold leading-tight mb-4">{post.title}</h1>
-          <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
-            <span className="flex items-center gap-1"><User className="h-4 w-4" />{post.author}</span>
-            <span className="flex items-center gap-1">
-              <Calendar className="h-4 w-4" />
-              {format(new Date(post.published_at || post.created_at), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
-            </span>
-            <span className="flex items-center gap-1"><Clock className="h-4 w-4" />{readingTime(post.content)} min de leitura</span>
-            <Button variant="ghost" size="sm" onClick={handleShare} className="ml-auto">
-              <Share2 className="h-4 w-4 mr-1" /> Compartilhar
-            </Button>
+      {/* Hero Banner */}
+      <div className="relative bg-primary overflow-hidden">
+        <div className="max-w-6xl mx-auto px-4 py-12 md:py-16 flex flex-col md:flex-row items-center gap-8">
+          <div className="flex-1 z-10">
+            {post.category && (
+              <div className="flex flex-wrap gap-2 mb-4">
+                <Badge variant="outline" className="border-primary-foreground/40 text-primary-foreground bg-primary-foreground/10">
+                  {post.category}
+                </Badge>
+                {post.tags && post.tags.slice(0, 1).map(tag => (
+                  <Badge key={tag} variant="outline" className="border-primary-foreground/40 text-primary-foreground bg-primary-foreground/10">
+                    {tag}
+                  </Badge>
+                ))}
+              </div>
+            )}
+            <h1 className="text-2xl md:text-4xl font-bold text-primary-foreground leading-tight mb-4">
+              {post.title}
+            </h1>
+            <p className="text-primary-foreground/80 text-sm">
+              Publicado em {format(new Date(post.published_at || post.created_at), "dd/MM/yyyy", { locale: ptBR })}
+            </p>
           </div>
-        </header>
+          {post.featured_image && (
+            <div className="shrink-0 w-48 h-48 md:w-64 md:h-64 rounded-full overflow-hidden border-4 border-primary-foreground/20 shadow-xl">
+              <img src={post.featured_image} alt={post.title} className="w-full h-full object-cover" />
+            </div>
+          )}
+        </div>
+      </div>
 
-        {/* Featured Image */}
-        {post.featured_image && (
-          <img src={post.featured_image} alt={post.title} className="w-full rounded-xl mb-8 object-cover max-h-[500px]" />
-        )}
+      {/* Breadcrumbs */}
+      <div className="border-b bg-muted/30">
+        <div className="max-w-6xl mx-auto px-4 py-3">
+          <nav className="flex items-center gap-1 text-sm text-muted-foreground flex-wrap">
+            <Link to="/blog" className="hover:text-primary transition-colors">Blog</Link>
+            {post.category && (
+              <>
+                <ChevronRight className="h-3 w-3" />
+                <Link to={`/blog?category=${encodeURIComponent(post.category)}`} className="hover:text-primary transition-colors">
+                  {post.category}
+                </Link>
+              </>
+            )}
+            <ChevronRight className="h-3 w-3" />
+            <span className="text-foreground font-medium truncate max-w-[300px]">{post.title}</span>
+          </nav>
+        </div>
+      </div>
 
-        {/* Content */}
-        <div
-          className="prose prose-lg max-w-none dark:prose-invert prose-headings:text-foreground prose-p:text-foreground/90 prose-a:text-primary prose-img:rounded-lg"
-          dangerouslySetInnerHTML={{ __html: post.content }}
-        />
+      {/* Content + Sidebar */}
+      <div className="max-w-6xl mx-auto px-4 py-8">
+        <div className="flex flex-col lg:flex-row gap-8">
+          {/* Main Content */}
+          <article className="flex-1 min-w-0">
+            {/* Meta info */}
+            <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground mb-8 pb-4 border-b">
+              <span className="flex items-center gap-1"><User className="h-4 w-4" />{post.author}</span>
+              <span className="flex items-center gap-1">
+                <Calendar className="h-4 w-4" />
+                {format(new Date(post.published_at || post.created_at), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+              </span>
+              <span className="flex items-center gap-1"><Clock className="h-4 w-4" />{readingTime(post.content)} min de leitura</span>
+              <Button variant="ghost" size="sm" onClick={handleShare} className="ml-auto">
+                <Share2 className="h-4 w-4 mr-1" /> Compartilhar
+              </Button>
+            </div>
 
-        {/* Tags */}
-        {post.tags && post.tags.length > 0 && (
-          <div className="flex flex-wrap gap-2 mt-8 pt-6 border-t">
-            {post.tags.map(tag => (
-              <Link key={tag} to={`/blog?tag=${encodeURIComponent(tag)}`}>
-                <Badge variant="outline">{tag}</Badge>
-              </Link>
-            ))}
-          </div>
-        )}
-      </article>
+            {/* Article content */}
+            <div
+              className="prose prose-lg max-w-none dark:prose-invert prose-headings:text-foreground prose-p:text-foreground/90 prose-a:text-primary prose-img:rounded-lg"
+              dangerouslySetInnerHTML={{ __html: processedContent }}
+            />
+
+            {/* Tags */}
+            {post.tags && post.tags.length > 0 && (
+              <div className="flex flex-wrap gap-2 mt-8 pt-6 border-t">
+                {post.tags.map(tag => (
+                  <Link key={tag} to={`/blog?tag=${encodeURIComponent(tag)}`}>
+                    <Badge variant="outline">{tag}</Badge>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </article>
+
+          {/* Sidebar - Table of Contents */}
+          {headings.length > 0 && (
+            <aside className="lg:w-80 shrink-0">
+              <div className="lg:sticky lg:top-24 border rounded-xl p-5 bg-card shadow-sm">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="font-bold text-foreground">Acesso rápido</h3>
+                  <button onClick={() => setTocOpen(!tocOpen)} className="text-muted-foreground hover:text-primary">
+                    <ChevronUp className={`h-5 w-5 transition-transform ${tocOpen ? '' : 'rotate-180'}`} />
+                  </button>
+                </div>
+                {tocOpen && (
+                  <nav className="space-y-2">
+                    {headings.map((h) => (
+                      <button
+                        key={h.id}
+                        onClick={() => scrollToHeading(h.id)}
+                        className={`block w-full text-left text-sm hover:text-primary transition-colors text-muted-foreground ${
+                          h.level === 'H1' ? 'font-semibold' : h.level === 'H3' ? 'pl-4' : ''
+                        }`}
+                      >
+                        {h.text}
+                      </button>
+                    ))}
+                  </nav>
+                )}
+              </div>
+            </aside>
+          )}
+        </div>
+      </div>
     </MainLayout>
   );
 };
