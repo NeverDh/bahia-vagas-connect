@@ -10,6 +10,8 @@ import Placeholder from '@tiptap/extension-placeholder';
 import TextAlign from '@tiptap/extension-text-align';
 import Underline from '@tiptap/extension-underline';
 import Youtube from '@tiptap/extension-youtube';
+import FontSize from '@tiptap/extension-font-size';
+import { TextStyle } from '@tiptap/extension-text-style';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { supabase } from '@/integrations/supabase/client';
@@ -20,7 +22,8 @@ import {
   Heading1, Heading2, Heading3, Heading4,
   List, ListOrdered, Quote, Code, Table as TableIcon,
   Image as ImageIcon, Youtube as YoutubeIcon, Link as LinkIcon,
-  AlignLeft, AlignCenter, AlignRight, Undo, Redo, Minus
+  AlignLeft, AlignCenter, AlignRight, Undo, Redo, Minus,
+  AArrowUp, AArrowDown
 } from 'lucide-react';
 
 interface RichTextEditorProps {
@@ -46,6 +49,8 @@ export const RichTextEditor = ({ content, onChange }: RichTextEditorProps) => {
       Placeholder.configure({ placeholder: 'Comece a escrever seu artigo...' }),
       TextAlign.configure({ types: ['heading', 'paragraph'] }),
       Underline,
+      TextStyle,
+      FontSize,
       Youtube.configure({ width: 640, height: 360 }),
     ],
     content,
@@ -73,6 +78,22 @@ export const RichTextEditor = ({ content, onChange }: RichTextEditorProps) => {
   const addLink = () => {
     const url = window.prompt('URL do link:');
     if (url) editor?.chain().focus().setLink({ href: url }).run();
+  };
+
+  const fontSizes = ['12px', '14px', '16px', '18px', '20px', '24px', '28px', '32px', '36px', '48px'];
+
+  const increaseFontSize = () => {
+    const current = editor?.getAttributes('textStyle')?.fontSize || '16px';
+    const idx = fontSizes.indexOf(current);
+    const next = idx < fontSizes.length - 1 ? fontSizes[idx + 1] : fontSizes[fontSizes.length - 1];
+    editor?.chain().focus().setFontSize(next).run();
+  };
+
+  const decreaseFontSize = () => {
+    const current = editor?.getAttributes('textStyle')?.fontSize || '16px';
+    const idx = fontSizes.indexOf(current);
+    const next = idx > 0 ? fontSizes[idx - 1] : fontSizes[0];
+    editor?.chain().focus().setFontSize(next).run();
   };
 
   const addYoutube = () => {
@@ -110,6 +131,10 @@ export const RichTextEditor = ({ content, onChange }: RichTextEditorProps) => {
         <ToolBtn onClick={() => editor.chain().focus().toggleItalic().run()} active={editor.isActive('italic')} title="Itálico"><Italic className="h-4 w-4" /></ToolBtn>
         <ToolBtn onClick={() => editor.chain().focus().toggleUnderline().run()} active={editor.isActive('underline')} title="Sublinhado"><UnderlineIcon className="h-4 w-4" /></ToolBtn>
         <ToolBtn onClick={() => editor.chain().focus().toggleStrike().run()} active={editor.isActive('strike')} title="Riscado"><Strikethrough className="h-4 w-4" /></ToolBtn>
+        <div className="w-px bg-border mx-1" />
+        <ToolBtn onClick={decreaseFontSize} title="Diminuir fonte"><AArrowDown className="h-4 w-4" /></ToolBtn>
+        <span className="text-xs flex items-center px-1 text-muted-foreground min-w-[36px] justify-center">{editor?.getAttributes('textStyle')?.fontSize || '16px'}</span>
+        <ToolBtn onClick={increaseFontSize} title="Aumentar fonte"><AArrowUp className="h-4 w-4" /></ToolBtn>
         <div className="w-px bg-border mx-1" />
         <ToolBtn onClick={() => editor.chain().focus().setTextAlign('left').run()} active={editor.isActive({ textAlign: 'left' })} title="Alinhar esquerda"><AlignLeft className="h-4 w-4" /></ToolBtn>
         <ToolBtn onClick={() => editor.chain().focus().setTextAlign('center').run()} active={editor.isActive({ textAlign: 'center' })} title="Centralizar"><AlignCenter className="h-4 w-4" /></ToolBtn>
