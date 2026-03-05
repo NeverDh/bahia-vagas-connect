@@ -18,6 +18,9 @@ export const Header = () => {
       <Link to="/vagas" onClick={() => mobile && setOpen(false)}>
         <Button variant="ghost" className={`text-white hover:text-white/80 hover:bg-primary/80 ${mobile ? "w-full justify-start text-orange-500 hover:text-orange-600 hover:bg-orange-50" : ""}`}>Vagas</Button>
       </Link>
+      <Link to="/blog" onClick={() => mobile && setOpen(false)}>
+        <Button variant="ghost" className={`text-white hover:text-white/80 hover:bg-primary/80 ${mobile ? "w-full justify-start text-orange-500 hover:text-orange-600 hover:bg-orange-50" : ""}`}>Blog</Button>
+      </Link>
       <Link to="/empresas" onClick={() => mobile && setOpen(false)}>
         <Button variant="ghost" className={`text-white hover:text-white/80 hover:bg-primary/80 ${mobile ? "w-full justify-start text-orange-500 hover:text-orange-600 hover:bg-orange-50" : ""}`}>Para Empresas</Button>
       </Link>
