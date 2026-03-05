@@ -8,8 +8,9 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Shield, Briefcase, Building2, Users, Download, Trash2, RefreshCw, AlertTriangle, XCircle } from "lucide-react";
+import { Shield, Briefcase, Building2, Users, Download, Trash2, RefreshCw, AlertTriangle, XCircle, FileText } from "lucide-react";
 import { AdminMetaTags } from "@/components/AdminMetaTags";
+import { AdminBlogManager } from "@/components/blog/AdminBlogManager";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { useAdmin } from "@/hooks/useAdmin";
@@ -221,6 +222,7 @@ const Admin = () => {
             <TabsList>
               <TabsTrigger value="jobs">Vagas</TabsTrigger>
               <TabsTrigger value="companies">Empresas</TabsTrigger>
+              <TabsTrigger value="blog">Blog</TabsTrigger>
               <TabsTrigger value="import">Importar Vagas</TabsTrigger>
               <TabsTrigger value="metatags">Meta Tags</TabsTrigger>
             </TabsList>
@@ -325,6 +327,10 @@ const Admin = () => {
                   </Table>
                 </CardContent>
               </Card>
+            </TabsContent>
+
+            <TabsContent value="blog">
+              <AdminBlogManager />
             </TabsContent>
 
             <TabsContent value="import" className="space-y-4">
