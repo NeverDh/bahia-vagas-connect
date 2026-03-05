@@ -18,6 +18,8 @@ import JobsByCity from "./pages/JobsByCity";
 import SiteUrls from "./pages/SiteUrls";
 import CookiesNecessarios from "./pages/CookiesNecessarios";
 import TermosDeUso from "./pages/TermosDeUso";
+import Blog from "./pages/Blog";
+import BlogPost from "./pages/BlogPost";
 import { bahiaMunicipios } from "./lib/bahia-municipios";
 import { useMetaTags } from "./hooks/useMetaTags";
 import { CookieConsent } from "./components/CookieConsent";
@@ -53,6 +55,8 @@ const App = () => (
                 <Route path="/admin" element={<Admin />} />
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/urls" element={<SiteUrls />} />
+                <Route path="/blog" element={<Blog />} />
+                <Route path="/blog/:slug" element={<BlogPost />} />
                 <Route path="/privacidade" element={<PrivacyPolicy />} />
                 <Route path="/cookies-necessarios" element={<CookiesNecessarios />} />
                 <Route path="/termos-de-uso" element={<TermosDeUso />} />
