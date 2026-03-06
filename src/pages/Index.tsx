@@ -3,14 +3,14 @@ import { MainLayout } from "@/components/MainLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, Briefcase, Users, TrendingUp, MapPin } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { RecentJobsByCity } from "@/components/RecentJobsByCity";
 import { AdBanner } from "@/components/AdBanner";
 
 const Index = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [locationTerm, setLocationTerm] = useState("");
-  const navigate = useNavigate();
+  
 
   const buildSearchUrl = () => {
     const params = new URLSearchParams();
