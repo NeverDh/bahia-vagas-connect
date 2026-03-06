@@ -34,7 +34,11 @@ const contractTypeLabels: Record<string, string> = {
 };
 
 const experienceLevelLabels: Record<string, string> = {
+  jovem_aprendiz: "Jovem Aprendiz",
+  auxiliar: "Auxiliar",
+  assistente: "Assistente",
   intern: "Estágio",
+  freelancer: "Freelancer",
   junior: "Júnior",
   mid: "Pleno",
   senior: "Sênior",
