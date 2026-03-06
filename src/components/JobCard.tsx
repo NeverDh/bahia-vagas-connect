@@ -97,9 +97,11 @@ export const JobCard = ({ job, hasApplied = false }: JobCardProps) => {
                 {contractTypeLabels[job.contract_type] || job.contract_type}
               </Badge>
               
-              <Badge variant="outline">
-                {experienceLevelLabels[job.experience_level] || job.experience_level}
-              </Badge>
+              {(job.experience_level !== "intern" || job.contract_type === "intern") && (
+                <Badge variant="outline">
+                  {experienceLevelLabels[job.experience_level] || job.experience_level}
+                </Badge>
+              )}
             </div>
 
             <div className="flex items-center justify-between text-sm">
