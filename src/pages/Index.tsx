@@ -12,13 +12,15 @@ const Index = () => {
   const [locationTerm, setLocationTerm] = useState("");
   const navigate = useNavigate();
 
-  const handleSearch = () => {
+  const buildSearchUrl = () => {
     const params = new URLSearchParams();
     if (searchTerm.trim()) params.set("q", searchTerm.trim());
     if (locationTerm.trim()) params.set("location", locationTerm.trim());
+    return params.toString() ? `/vagas?${params.toString()}` : "/vagas";
+  };
 
-    const targetUrl = params.toString() ? `/vagas?${params.toString()}` : "/vagas";
-    navigate(targetUrl);
+  const handleSearch = () => {
+    window.location.assign(buildSearchUrl());
   };
 
   return (
