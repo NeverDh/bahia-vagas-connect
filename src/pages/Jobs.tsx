@@ -74,7 +74,7 @@ const Jobs = ({ initialLocation }: JobsProps = {}) => {
   const fetchJobs = async () => {
     try {
       setLoading(true);
-      const normalizedSearch = searchTerm.trim().replaceAll(",", " ");
+      const normalizedSearch = searchTerm.trim().replace(/,/g, " ");
       let matchedCompanyIds: string[] = [];
 
       if (normalizedSearch) {
@@ -145,8 +145,17 @@ const Jobs = ({ initialLocation }: JobsProps = {}) => {
         .order("created_at", { ascending: filters.sortOrder === "oldest" })
         .range(from, to);
 
-      if (searchTerm) {
-        dataQuery = dataQuery.or(`title.ilike.%${searchTerm}%,category.ilike.%${searchTerm}%`);
+      if (normalizedSearch) {
+        const searchConditions = [
+          `title.ilike.%${normalizedSearch}%`,
+          `category.ilike.%${normalizedSearch}%`
+        ];
+
+        if (matchedCompanyIds.length > 0) {
+          searchConditions.push(`company_id.in.(${matchedCompanyIds.join(",")})`);
+        }
+
+        dataQuery = dataQuery.or(searchConditions.join(","));
       }
 
       if (filters.remoteOnly) {
