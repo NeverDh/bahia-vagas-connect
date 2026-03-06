@@ -101,7 +101,7 @@ export const useAuth = () => {
     if (error) {
       toast({
         title: "Erro ao criar conta",
-        description: error.message,
+        description: translateError(error.message),
         variant: "destructive",
       });
       return { error };
@@ -121,7 +121,7 @@ export const useAuth = () => {
         if (profileError) {
           toast({
             title: "Erro ao criar perfil",
-            description: profileError.message,
+            description: translateError(profileError.message),
             variant: "destructive",
           });
           return { error: profileError };
@@ -138,7 +138,7 @@ export const useAuth = () => {
         if (companyError) {
           toast({
             title: "Erro ao criar empresa",
-            description: companyError.message,
+            description: translateError(companyError.message),
             variant: "destructive",
           });
           return { error: companyError };
@@ -163,7 +163,7 @@ export const useAuth = () => {
     if (error) {
       toast({
         title: "Erro ao fazer login",
-        description: error.message,
+        description: translateError(error.message),
         variant: "destructive",
       });
       return { error };
@@ -183,7 +183,7 @@ export const useAuth = () => {
     if (error) {
       toast({
         title: "Erro ao sair",
-        description: error.message,
+        description: translateError(error.message),
         variant: "destructive",
       });
       return { error };
