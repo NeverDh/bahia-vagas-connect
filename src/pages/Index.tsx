@@ -44,7 +44,7 @@ const Index = () => {
             
             <div className="flex flex-col sm:flex-row gap-3 max-w-2xl mx-auto">
               <div className="flex-1 relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground pointer-events-none" />
                 <Input 
                   placeholder="Cargo, palavra-chave ou empresa" 
                   className="pl-10 h-12"
@@ -59,7 +59,7 @@ const Index = () => {
                 />
               </div>
               <div className="flex-1 relative">
-                <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground pointer-events-none" />
                 <Input 
                   placeholder="Cidade ou região" 
                   className="pl-10 h-12"
