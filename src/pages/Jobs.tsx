@@ -75,35 +75,33 @@ const Jobs = ({ initialLocation }: JobsProps = {}) => {
     try {
       setLoading(true);
       const normalizedSearch = searchTerm.trim().replace(/,/g, " ");
-      let matchedCompanyIds: string[] = [];
-
-      if (normalizedSearch) {
-        const { data: companiesData } = await supabase
-          .from("companies")
-          .select("id")
-          .ilike("name", `%${normalizedSearch}%`)
-          .limit(200);
-
-        matchedCompanyIds = (companiesData || []).map((company) => company.id);
-      }
       
+      // Use RPC search function for accent-insensitive, partial-word search
+      let searchJobIds: string[] | null = null;
+      if (normalizedSearch) {
+        const { data: searchResults, error: searchError } = await supabase
+          .rpc("search_jobs", { search_text: normalizedSearch });
+        
+        if (searchError) throw searchError;
+        searchJobIds = (searchResults as string[]) || [];
+        
+        // If search returned no results, short-circuit
+        if (searchJobIds.length === 0) {
+          setJobs([]);
+          setTotalJobs(0);
+          setLoading(false);
+          return;
+        }
+      }
+
       // Build base query for counting
       let countQuery = supabase
         .from("jobs")
         .select("*", { count: "exact", head: true })
         .eq("status", "active");
 
-      if (normalizedSearch) {
-        const searchConditions = [
-          `title.ilike.%${normalizedSearch}%`,
-          `category.ilike.%${normalizedSearch}%`
-        ];
-
-        if (matchedCompanyIds.length > 0) {
-          searchConditions.push(`company_id.in.(${matchedCompanyIds.join(",")})`);
-        }
-
-        countQuery = countQuery.or(searchConditions.join(","));
+      if (searchJobIds) {
+        countQuery = countQuery.in("id", searchJobIds);
       }
 
       if (filters.remoteOnly) {
@@ -124,10 +122,8 @@ const Jobs = ({ initialLocation }: JobsProps = {}) => {
         const orConditions: string[] = [];
         const levelsForDb = filters.experienceLevels;
         
-        // Always match on experience_level column
         orConditions.push(`experience_level.in.(${levelsForDb.join(",")})`);
         
-        // Add title-based matching for specific levels
         for (const level of levelsForDb) {
           const keywords = titleKeywords[level];
           if (keywords) {
@@ -167,17 +163,8 @@ const Jobs = ({ initialLocation }: JobsProps = {}) => {
         .order("created_at", { ascending: filters.sortOrder === "oldest" })
         .range(from, to);
 
-      if (normalizedSearch) {
-        const searchConditions = [
-          `title.ilike.%${normalizedSearch}%`,
-          `category.ilike.%${normalizedSearch}%`
-        ];
-
-        if (matchedCompanyIds.length > 0) {
-          searchConditions.push(`company_id.in.(${matchedCompanyIds.join(",")})`);
-        }
-
-        dataQuery = dataQuery.or(searchConditions.join(","));
+      if (searchJobIds) {
+        dataQuery = dataQuery.in("id", searchJobIds);
       }
 
       if (filters.remoteOnly) {
