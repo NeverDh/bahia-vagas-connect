@@ -1,12 +1,24 @@
+import { useState } from "react";
 import { MainLayout } from "@/components/MainLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, Briefcase, Users, TrendingUp, MapPin } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { RecentJobsByCity } from "@/components/RecentJobsByCity";
 import { AdBanner } from "@/components/AdBanner";
 
 const Index = () => {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [locationTerm, setLocationTerm] = useState("");
+  const navigate = useNavigate();
+
+  const handleSearch = () => {
+    const params = new URLSearchParams();
+    if (searchTerm.trim()) params.set("q", searchTerm.trim());
+    if (locationTerm.trim()) params.set("location", locationTerm.trim());
+    navigate(`/vagas${params.toString() ? `?${params.toString()}` : ""}`);
+  };
+
   return (
     <MainLayout>
       
@@ -26,12 +38,17 @@ const Index = () => {
               Conectamos talentos baianos com as melhores empresas da região
             </p>
             
-            <div className="flex flex-col sm:flex-row gap-3 max-w-2xl mx-auto">
+            <form
+              onSubmit={(e) => { e.preventDefault(); handleSearch(); }}
+              className="flex flex-col sm:flex-row gap-3 max-w-2xl mx-auto"
+            >
               <div className="flex-1 relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                 <Input 
                   placeholder="Cargo, palavra-chave ou empresa" 
                   className="pl-10 h-12"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
               <div className="flex-1 relative">
@@ -39,14 +56,14 @@ const Index = () => {
                 <Input 
                   placeholder="Cidade ou região" 
                   className="pl-10 h-12"
+                  value={locationTerm}
+                  onChange={(e) => setLocationTerm(e.target.value)}
                 />
               </div>
-              <Link to="/vagas">
-                <Button size="lg" className="w-full sm:w-auto h-12 px-8">
-                  Buscar Vagas
-                </Button>
-              </Link>
-            </div>
+              <Button type="submit" size="lg" className="w-full sm:w-auto h-12 px-8">
+                Buscar Vagas
+              </Button>
+            </form>
           </div>
         </div>
         
