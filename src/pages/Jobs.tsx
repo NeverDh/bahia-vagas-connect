@@ -74,6 +74,18 @@ const Jobs = ({ initialLocation }: JobsProps = {}) => {
   const fetchJobs = async () => {
     try {
       setLoading(true);
+      const normalizedSearch = searchTerm.trim().replace(/,/g, " ");
+      let matchedCompanyIds: string[] = [];
+
+      if (normalizedSearch) {
+        const { data: companiesData } = await supabase
+          .from("companies")
+          .select("id")
+          .ilike("name", `%${normalizedSearch}%`)
+          .limit(200);
+
+        matchedCompanyIds = (companiesData || []).map((company) => company.id);
+      }
       
       // Build base query for counting
       let countQuery = supabase
@@ -81,8 +93,17 @@ const Jobs = ({ initialLocation }: JobsProps = {}) => {
         .select("*", { count: "exact", head: true })
         .eq("status", "active");
 
-      if (searchTerm) {
-        countQuery = countQuery.or(`title.ilike.%${searchTerm}%,category.ilike.%${searchTerm}%`);
+      if (normalizedSearch) {
+        const searchConditions = [
+          `title.ilike.%${normalizedSearch}%`,
+          `category.ilike.%${normalizedSearch}%`
+        ];
+
+        if (matchedCompanyIds.length > 0) {
+          searchConditions.push(`company_id.in.(${matchedCompanyIds.join(",")})`);
+        }
+
+        countQuery = countQuery.or(searchConditions.join(","));
       }
 
       if (filters.remoteOnly) {
@@ -124,8 +145,17 @@ const Jobs = ({ initialLocation }: JobsProps = {}) => {
         .order("created_at", { ascending: filters.sortOrder === "oldest" })
         .range(from, to);
 
-      if (searchTerm) {
-        dataQuery = dataQuery.or(`title.ilike.%${searchTerm}%,category.ilike.%${searchTerm}%`);
+      if (normalizedSearch) {
+        const searchConditions = [
+          `title.ilike.%${normalizedSearch}%`,
+          `category.ilike.%${normalizedSearch}%`
+        ];
+
+        if (matchedCompanyIds.length > 0) {
+          searchConditions.push(`company_id.in.(${matchedCompanyIds.join(",")})`);
+        }
+
+        dataQuery = dataQuery.or(searchConditions.join(","));
       }
 
       if (filters.remoteOnly) {
