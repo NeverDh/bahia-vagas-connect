@@ -38,10 +38,7 @@ const Index = () => {
               Conectamos talentos baianos com as melhores empresas da região
             </p>
             
-            <form
-              onSubmit={(e) => { e.preventDefault(); handleSearch(); }}
-              className="flex flex-col sm:flex-row gap-3 max-w-2xl mx-auto"
-            >
+            <div className="flex flex-col sm:flex-row gap-3 max-w-2xl mx-auto">
               <div className="flex-1 relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                 <Input 
@@ -49,6 +46,12 @@ const Index = () => {
                   className="pl-10 h-12"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      handleSearch();
+                    }
+                  }}
                 />
               </div>
               <div className="flex-1 relative">
@@ -58,12 +61,18 @@ const Index = () => {
                   className="pl-10 h-12"
                   value={locationTerm}
                   onChange={(e) => setLocationTerm(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      handleSearch();
+                    }
+                  }}
                 />
               </div>
-              <Button type="submit" size="lg" className="w-full sm:w-auto h-12 px-8">
+              <Button type="button" size="lg" className="w-full sm:w-auto h-12 px-8" onClick={handleSearch}>
                 Buscar Vagas
               </Button>
-            </form>
+            </div>
           </div>
         </div>
         
