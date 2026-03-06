@@ -73,8 +73,13 @@ const Index = () => {
                   }}
                 />
               </div>
-              <Button type="button" size="lg" className="w-full sm:w-auto h-12 px-8" onClick={handleSearch}>
-                Buscar Vagas
+              <Button type="button" size="lg" className="w-full sm:w-auto h-12 px-8" asChild>
+                <a href={buildSearchUrl()} onClick={(e) => {
+                  e.preventDefault();
+                  handleSearch();
+                }}>
+                  Buscar Vagas
+                </a>
               </Button>
             </div>
           </div>
