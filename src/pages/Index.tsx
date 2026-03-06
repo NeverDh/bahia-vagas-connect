@@ -16,7 +16,9 @@ const Index = () => {
     const params = new URLSearchParams();
     if (searchTerm.trim()) params.set("q", searchTerm.trim());
     if (locationTerm.trim()) params.set("location", locationTerm.trim());
-    navigate(`/vagas${params.toString() ? `?${params.toString()}` : ""}`);
+
+    const targetUrl = params.toString() ? `/vagas?${params.toString()}` : "/vagas";
+    navigate(targetUrl);
   };
 
   return (
