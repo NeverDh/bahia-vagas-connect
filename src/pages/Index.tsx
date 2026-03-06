@@ -28,7 +28,7 @@ const Index = () => {
       
       {/* Hero Section */}
       <section className="relative overflow-hidden bg-gradient-to-br from-primary/5 via-background to-accent/5 mt-0 pt-0">
-        <div className="container px-4 py-16 md:py-28">
+        <div className="container px-4 py-16 md:py-28 relative z-10">
           <div className="max-w-3xl mx-auto text-center space-y-8">
             <h1 className="text-4xl md:text-6xl font-bold leading-tight">
               Encontre sua próxima{" "}
@@ -73,16 +73,16 @@ const Index = () => {
                   }}
                 />
               </div>
-              <Button type="button" size="lg" className="w-full sm:w-auto h-12 px-8" asChild>
-                <Link to={searchUrl}>Buscar Vagas</Link>
+              <Button type="button" size="lg" className="w-full sm:w-auto h-12 px-8" onClick={handleSubmitSearch}>
+                Buscar Vagas
               </Button>
             </div>
           </div>
         </div>
         
         {/* Decorative Elements */}
-        <div className="absolute top-20 left-10 w-72 h-72 bg-primary/10 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-20 right-10 w-96 h-96 bg-accent/10 rounded-full blur-3xl"></div>
+        <div className="absolute top-20 left-10 w-72 h-72 bg-primary/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div className="absolute bottom-20 right-10 w-96 h-96 bg-accent/10 rounded-full blur-3xl pointer-events-none"></div>
       </section>
 
       {/* Ad between hero and stats - all devices */}
