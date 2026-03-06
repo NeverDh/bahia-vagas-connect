@@ -358,6 +358,8 @@ export type Database = {
         }
         Returns: boolean
       }
+      search_jobs: { Args: { search_text: string }; Returns: string[] }
+      unaccent: { Args: { "": string }; Returns: string }
     }
     Enums: {
       app_role: "candidate" | "company" | "admin"
