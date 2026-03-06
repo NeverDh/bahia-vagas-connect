@@ -6,6 +6,29 @@ import { useToast } from "@/hooks/use-toast";
 
 export type UserRole = "candidate" | "company";
 
+const translateError = (message: string): string => {
+  const translations: Record<string, string> = {
+    "Invalid login credentials": "Email ou senha incorretos.",
+    "Email not confirmed": "Seu email ainda não foi confirmado. Verifique sua caixa de entrada.",
+    "User already registered": "Este email já está cadastrado.",
+    "Password should be at least 6 characters": "A senha deve ter pelo menos 6 caracteres.",
+    "Signup requires a valid password": "É necessário informar uma senha válida.",
+    "Unable to validate email address: invalid format": "Formato de email inválido.",
+    "Email rate limit exceeded": "Muitas tentativas. Aguarde alguns minutos e tente novamente.",
+    "For security purposes, you can only request this once every 60 seconds": "Por segurança, aguarde 60 segundos antes de tentar novamente.",
+    "New password should be different from the old password.": "A nova senha deve ser diferente da senha atual.",
+    "Auth session missing!": "Sessão expirada. Faça login novamente.",
+    "Token has expired or is invalid": "O link expirou ou é inválido. Solicite um novo.",
+  };
+
+  for (const [key, value] of Object.entries(translations)) {
+    if (message.toLowerCase().includes(key.toLowerCase())) {
+      return value;
+    }
+  }
+  return message;
+};
+
 export const useAuth = () => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
@@ -78,7 +101,7 @@ export const useAuth = () => {
     if (error) {
       toast({
         title: "Erro ao criar conta",
-        description: error.message,
+        description: translateError(error.message),
         variant: "destructive",
       });
       return { error };
@@ -98,7 +121,7 @@ export const useAuth = () => {
         if (profileError) {
           toast({
             title: "Erro ao criar perfil",
-            description: profileError.message,
+            description: translateError(profileError.message),
             variant: "destructive",
           });
           return { error: profileError };
@@ -115,7 +138,7 @@ export const useAuth = () => {
         if (companyError) {
           toast({
             title: "Erro ao criar empresa",
-            description: companyError.message,
+            description: translateError(companyError.message),
             variant: "destructive",
           });
           return { error: companyError };
@@ -140,7 +163,7 @@ export const useAuth = () => {
     if (error) {
       toast({
         title: "Erro ao fazer login",
-        description: error.message,
+        description: translateError(error.message),
         variant: "destructive",
       });
       return { error };
@@ -160,7 +183,7 @@ export const useAuth = () => {
     if (error) {
       toast({
         title: "Erro ao sair",
-        description: error.message,
+        description: translateError(error.message),
         variant: "destructive",
       });
       return { error };
