@@ -115,7 +115,29 @@ const Jobs = ({ initialLocation }: JobsProps = {}) => {
       }
 
       if (filters.experienceLevels.length > 0) {
-        countQuery = countQuery.in("experience_level", filters.experienceLevels as any);
+        const titleKeywords: Record<string, string[]> = {
+          auxiliar: ["auxiliar"],
+          assistente: ["assistente"],
+          intern: ["estágio", "estagiário", "estagiario"],
+        };
+
+        const orConditions: string[] = [];
+        const levelsForDb = filters.experienceLevels;
+        
+        // Always match on experience_level column
+        orConditions.push(`experience_level.in.(${levelsForDb.join(",")})`);
+        
+        // Add title-based matching for specific levels
+        for (const level of levelsForDb) {
+          const keywords = titleKeywords[level];
+          if (keywords) {
+            for (const kw of keywords) {
+              orConditions.push(`title.ilike.%${kw}%`);
+            }
+          }
+        }
+
+        countQuery = countQuery.or(orConditions.join(","));
       }
 
       if (filters.location) {
@@ -167,7 +189,27 @@ const Jobs = ({ initialLocation }: JobsProps = {}) => {
       }
 
       if (filters.experienceLevels.length > 0) {
-        dataQuery = dataQuery.in("experience_level", filters.experienceLevels as any);
+        const titleKeywords: Record<string, string[]> = {
+          auxiliar: ["auxiliar"],
+          assistente: ["assistente"],
+          intern: ["estágio", "estagiário", "estagiario"],
+        };
+
+        const orConditions: string[] = [];
+        const levelsForDb = filters.experienceLevels;
+        
+        orConditions.push(`experience_level.in.(${levelsForDb.join(",")})`);
+        
+        for (const level of levelsForDb) {
+          const keywords = titleKeywords[level];
+          if (keywords) {
+            for (const kw of keywords) {
+              orConditions.push(`title.ilike.%${kw}%`);
+            }
+          }
+        }
+
+        dataQuery = dataQuery.or(orConditions.join(","));
       }
 
       if (filters.location) {
