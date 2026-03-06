@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { MainLayout } from "@/components/MainLayout";
 import { JobCard } from "@/components/JobCard";
 import { JobFilters } from "@/components/JobFilters";
@@ -20,11 +20,12 @@ interface JobsProps {
 }
 
 const Jobs = ({ initialLocation }: JobsProps = {}) => {
+  const [searchParams] = useSearchParams();
   const [jobs, setJobs] = useState<any[]>([]);
   const [totalJobs, setTotalJobs] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [mobileSearchTerm, setMobileSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState(searchParams.get("q") || "");
+  const [mobileSearchTerm, setMobileSearchTerm] = useState(searchParams.get("q") || "");
   const [appliedJobIds, setAppliedJobIds] = useState<Set<string>>(new Set());
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
@@ -37,7 +38,7 @@ const Jobs = ({ initialLocation }: JobsProps = {}) => {
     contractTypes: [] as string[],
     experienceLevels: [] as string[],
     remoteOnly: false,
-    location: initialLocation || "",
+    location: initialLocation || searchParams.get("location") || "",
     sortOrder: "newest" as "newest" | "oldest"
   });
 
