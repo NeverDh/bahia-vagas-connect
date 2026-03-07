@@ -197,6 +197,16 @@ export const useAuth = () => {
       return { error };
     }
 
+    // Supabase returns a user without session and with fake id when email already exists
+    if (data.user && !data.session && data.user.identities?.length === 0) {
+      toast({
+        title: "Erro ao criar conta",
+        description: "Este email já está cadastrado. Faça login ou use outro email.",
+        variant: "destructive",
+      });
+      return { error: { message: "User already registered" } };
+    }
+
     if (data.user) {
       if (data.session) {
         await ensureUserProfile(data.user);
