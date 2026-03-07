@@ -6,6 +6,13 @@ import { useToast } from "@/hooks/use-toast";
 
 export type UserRole = "candidate" | "company";
 
+type ProfileData = {
+  full_name?: string;
+  phone?: string;
+  name?: string;
+  location?: string;
+};
+
 const translateError = (message: string): string => {
   const translations: Record<string, string> = {
     "Invalid login credentials": "Email ou senha incorretos.",
@@ -19,6 +26,7 @@ const translateError = (message: string): string => {
     "New password should be different from the old password.": "A nova senha deve ser diferente da senha atual.",
     "Auth session missing!": "Sessão expirada. Faça login novamente.",
     "Token has expired or is invalid": "O link expirou ou é inválido. Solicite um novo.",
+    "new row violates row-level security policy": "Permissão negada para salvar perfil. Entre na conta confirmada e tente novamente.",
   };
 
   for (const [key, value] of Object.entries(translations)) {
@@ -37,36 +45,60 @@ export const useAuth = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  useEffect(() => {
-    // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        if (session?.user) {
-          setTimeout(() => {
-            fetchUserRole(session.user.id);
-          }, 0);
-        } else {
-          setUserRole(null);
+  const ensureUserProfile = async (authUser: User) => {
+    const metadata = (authUser.user_metadata || {}) as ProfileData & { role?: UserRole };
+    const role = metadata.role;
+
+    if (!role) return;
+
+    if (role === "candidate") {
+      const { data: existingProfile } = await supabase
+        .from("candidate_profiles")
+        .select("id")
+        .eq("user_id", authUser.id)
+        .maybeSingle();
+
+      if (!existingProfile) {
+        const { error } = await supabase.from("candidate_profiles").insert({
+          user_id: authUser.id,
+          full_name: metadata.full_name || authUser.email?.split("@")[0] || "Candidato",
+          phone: metadata.phone || null,
+        });
+
+        if (error) {
+          toast({
+            title: "Erro ao criar perfil",
+            description: translateError(error.message),
+            variant: "destructive",
+          });
         }
       }
-    );
+    }
 
-    // Check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      
-      if (session?.user) {
-        fetchUserRole(session.user.id);
+    if (role === "company") {
+      const { data: existingCompany } = await supabase
+        .from("companies")
+        .select("id")
+        .eq("user_id", authUser.id)
+        .maybeSingle();
+
+      if (!existingCompany) {
+        const { error } = await supabase.from("companies").insert({
+          user_id: authUser.id,
+          name: metadata.name || "Empresa",
+          location: metadata.location || null,
+        });
+
+        if (error) {
+          toast({
+            title: "Erro ao criar empresa",
+            description: translateError(error.message),
+            variant: "destructive",
+          });
+        }
       }
-      setLoading(false);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
+    }
+  };
 
   const fetchUserRole = async (userId: string) => {
     const { data, error } = await supabase
@@ -75,26 +107,84 @@ export const useAuth = () => {
       .eq("user_id", userId);
 
     if (data && !error && data.length > 0) {
-      // Prioritize: admin > company > candidate
-      const roles = data.map(d => d.role as string);
+      const roles = data.map((d) => d.role as string);
       if (roles.includes("admin")) {
-        // Check for company or candidate role as the "functional" role
-        const functionalRole = roles.find(r => r === "company" || r === "candidate");
+        const functionalRole = roles.find((r) => r === "company" || r === "candidate");
         setUserRole((functionalRole || "candidate") as UserRole);
       } else {
         setUserRole(data[0].role as UserRole);
       }
+      return;
     }
+
+    const { data: candidateProfile } = await supabase
+      .from("candidate_profiles")
+      .select("id")
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    if (candidateProfile) {
+      setUserRole("candidate");
+      return;
+    }
+
+    const { data: companyProfile } = await supabase
+      .from("companies")
+      .select("id")
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    if (companyProfile) {
+      setUserRole("company");
+      return;
+    }
+
+    setUserRole(null);
   };
 
-  const signUp = async (email: string, password: string, role: UserRole, profileData: any) => {
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (_event, currentSession) => {
+        setSession(currentSession);
+        setUser(currentSession?.user ?? null);
+
+        if (currentSession?.user) {
+          setTimeout(async () => {
+            await ensureUserProfile(currentSession.user);
+            await fetchUserRole(currentSession.user.id);
+          }, 0);
+        } else {
+          setUserRole(null);
+        }
+      }
+    );
+
+    supabase.auth.getSession().then(async ({ data: { session: currentSession } }) => {
+      setSession(currentSession);
+      setUser(currentSession?.user ?? null);
+
+      if (currentSession?.user) {
+        await ensureUserProfile(currentSession.user);
+        await fetchUserRole(currentSession.user.id);
+      }
+      setLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const signUp = async (email: string, password: string, role: UserRole, profileData: ProfileData) => {
     const redirectUrl = `${window.location.origin}/`;
-    
+
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         emailRedirectTo: redirectUrl,
+        data: {
+          role,
+          ...profileData,
+        },
       },
     });
 
@@ -108,46 +198,15 @@ export const useAuth = () => {
     }
 
     if (data.user) {
-      // Create profile based on role
-      if (role === "candidate") {
-        const { error: profileError } = await supabase
-          .from("candidate_profiles")
-          .insert({
-            user_id: data.user.id,
-            full_name: profileData.full_name,
-            phone: profileData.phone,
-          });
-
-        if (profileError) {
-          toast({
-            title: "Erro ao criar perfil",
-            description: translateError(profileError.message),
-            variant: "destructive",
-          });
-          return { error: profileError };
-        }
-      } else if (role === "company") {
-        const { error: companyError } = await supabase
-          .from("companies")
-          .insert({
-            user_id: data.user.id,
-            name: profileData.name,
-            location: profileData.location,
-          });
-
-        if (companyError) {
-          toast({
-            title: "Erro ao criar empresa",
-            description: translateError(companyError.message),
-            variant: "destructive",
-          });
-          return { error: companyError };
-        }
+      if (data.session) {
+        await ensureUserProfile(data.user);
       }
 
       toast({
         title: "Conta criada com sucesso!",
-        description: "Você já pode fazer login.",
+        description: data.session
+          ? "Você já pode usar sua conta."
+          : "Confirme seu email e faça login para concluir a criação do perfil.",
       });
     }
 
@@ -167,6 +226,11 @@ export const useAuth = () => {
         variant: "destructive",
       });
       return { error };
+    }
+
+    if (data.user) {
+      await ensureUserProfile(data.user);
+      await fetchUserRole(data.user.id);
     }
 
     toast({
