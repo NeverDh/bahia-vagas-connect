@@ -21,7 +21,9 @@ import TermosDeUso from "./pages/TermosDeUso";
 import Blog from "./pages/Blog";
 import BlogPost from "./pages/BlogPost";
 import { bahiaMunicipios } from "./lib/bahia-municipios";
+import { seoJobPages } from "./lib/seo-job-pages";
 import { useMetaTags } from "./hooks/useMetaTags";
+import JobsByCategory from "./pages/JobsByCategory";
 import { CookieConsent } from "./components/CookieConsent";
 import { CookieGuard } from "./components/CookieGuard";
 
@@ -51,6 +53,9 @@ const App = () => (
               <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/vagas" element={<Jobs />} />
+                {seoJobPages.map((page) => (
+                  <Route key={page.slug} path={`/vagas-${page.slug}`} element={<JobsByCategory page={page} />} />
+                ))}
                 {Object.entries(bahiaMunicipios).map(([slug, name]) => (
                   <Route key={slug} path={`/vagas-${slug}`} element={<JobsByCity cityName={name} />} />
                 ))}

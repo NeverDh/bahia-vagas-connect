@@ -151,13 +151,25 @@ serve(async () => {
     { loc: "/cookies-necessarios", changefreq: "monthly", priority: "0.1" },
   ];
 
+  const seoJobPageSlugs = [
+    "auxiliar-administrativo", "vendedor", "atendente", "jovem-aprendiz",
+    "estagio", "sem-experiencia", "home-office", "meio-periodo",
+    "atendimento-ao-cliente", "logistica",
+  ];
+
+  const seoJobUrls = seoJobPageSlugs.map((slug) => ({
+    loc: `/vagas-${slug}`,
+    changefreq: "daily",
+    priority: "0.85",
+  }));
+
   const municipioUrls = Object.keys(bahiaMunicipios).map((slug) => ({
     loc: `/vagas-${slug}`,
     changefreq: "daily",
     priority: "0.8",
   }));
 
-  const allUrls = [...staticUrls, ...municipioUrls];
+  const allUrls = [...staticUrls, ...seoJobUrls, ...municipioUrls];
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
