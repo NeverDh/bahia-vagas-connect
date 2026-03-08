@@ -143,7 +143,6 @@ const Index = () => {
                   className="group bg-accent hover:bg-accent/90 text-white font-bold uppercase tracking-wide rounded-lg px-10 h-12 transition-all duration-200 hover:scale-105 hover:shadow-lg"
                 >
                   VEJA AGORA TODAS AS VAGAS
-                  <MousePointerClick className="ml-2 animate-bounce-x" size={20} />
                 </Button>
               </Link>
               {/* Animated fake cursor */}
