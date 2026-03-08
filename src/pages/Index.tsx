@@ -2,7 +2,7 @@ import { useMemo, useState, useEffect, useCallback } from "react";
 import { MainLayout } from "@/components/MainLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Briefcase, Users, TrendingUp, MapPin } from "lucide-react";
+import { Search, Briefcase, Users, TrendingUp, MapPin, MousePointerClick } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { RecentJobsByCity } from "@/components/RecentJobsByCity";
 import { AdBanner } from "@/components/AdBanner";
@@ -141,7 +141,7 @@ const Index = () => {
                 className="group bg-accent hover:bg-accent/90 text-white font-bold uppercase tracking-wide rounded-lg px-10 h-12 transition-all duration-200 hover:scale-105 hover:shadow-lg"
               >
                 VEJA AGORA TODAS AS VAGAS
-                <span className="inline-block ml-2 animate-bounce-x">→</span>
+                <MousePointerClick className="ml-2 animate-bounce-x" size={20} />
               </Button>
             </Link>
           </div>
