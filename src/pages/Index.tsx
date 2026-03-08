@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect, useCallback } from "react";
 import { MainLayout } from "@/components/MainLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,10 +7,66 @@ import { Link, useNavigate } from "react-router-dom";
 import { RecentJobsByCity } from "@/components/RecentJobsByCity";
 import { AdBanner } from "@/components/AdBanner";
 
+const TYPEWRITER_WORDS = [
+  "oportunidade",
+  "vaga",
+  "emprego",
+  "carreira",
+  "trabalho",
+  "estágio",
+  "contratação",
+  "processo seletivo",
+  "crescimento",
+  "futuro profissional",
+];
+
+const TYPING_SPEED = 80;
+const DELETING_SPEED = 50;
+const PAUSE_AFTER_TYPING = 2000;
+const PAUSE_AFTER_DELETING = 300;
+
+function useTypewriter(words: string[]) {
+  const [display, setDisplay] = useState(words[0]);
+  const [wordIndex, setWordIndex] = useState(0);
+  const [charIndex, setCharIndex] = useState(words[0].length);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  useEffect(() => {
+    const currentWord = words[wordIndex];
+
+    if (!isDeleting && charIndex === currentWord.length) {
+      // Pause after finishing typing
+      const timeout = setTimeout(() => setIsDeleting(true), PAUSE_AFTER_TYPING);
+      return () => clearTimeout(timeout);
+    }
+
+    if (isDeleting && charIndex === 0) {
+      // Move to next word after deleting
+      const nextIndex = (wordIndex + 1) % words.length;
+      setWordIndex(nextIndex);
+      setIsDeleting(false);
+      const timeout = setTimeout(() => {}, PAUSE_AFTER_DELETING);
+      return () => clearTimeout(timeout);
+    }
+
+    const speed = isDeleting ? DELETING_SPEED : TYPING_SPEED;
+    const timeout = setTimeout(() => {
+      const newCharIndex = isDeleting ? charIndex - 1 : charIndex + 1;
+      setCharIndex(newCharIndex);
+      setDisplay(words[isDeleting ? wordIndex : wordIndex].slice(0, newCharIndex));
+    }, speed);
+
+    return () => clearTimeout(timeout);
+  }, [charIndex, isDeleting, wordIndex, words]);
+
+  return display;
+}
+
 const Index = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [locationTerm, setLocationTerm] = useState("");
   const navigate = useNavigate();
+  const typedWord = useTypewriter(TYPEWRITER_WORDS);
 
   const searchUrl = useMemo(() => {
     const params = new URLSearchParams();
@@ -33,9 +89,10 @@ const Index = () => {
             <h1 className="text-4xl md:text-6xl font-bold leading-tight">
               Encontre sua próxima{" "}
               <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                oportunidade
-              </span>{" "}
-              na Bahia
+                {typedWord}
+              </span>
+              <span className="inline-block w-[3px] h-[0.9em] bg-primary align-middle ml-0.5 animate-[blink_1s_step-end_infinite]" />
+              {" "}na Bahia
             </h1>
             
             <p className="text-lg md:text-xl text-muted-foreground">
@@ -77,6 +134,15 @@ const Index = () => {
                 Buscar Vagas
               </Button>
             </div>
+
+            <Link to="/vagas">
+              <Button
+                size="lg"
+                className="mt-4 bg-accent hover:bg-accent/90 text-primary font-bold uppercase tracking-wide rounded-lg px-10 h-12 transition-all duration-200 hover:scale-105 hover:shadow-lg"
+              >
+                VEJA AGORA TODAS AS VAGAS
+              </Button>
+            </Link>
           </div>
         </div>
         
