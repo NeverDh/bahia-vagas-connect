@@ -10,14 +10,14 @@ import { AdBanner } from "@/components/AdBanner";
 const TYPEWRITER_WORDS = [
   "oportunidade",
   "vaga",
-  "emprego",
-  "carreira",
-  "trabalho",
-  "estágio",
-  "contratação",
-  "processo seletivo",
-  "crescimento",
-  "futuro profissional",
+  "chance profissional",
+  "posição",
+  "colocação",
+  "experiência profissional",
+  "etapa profissional",
+  "jornada profissional",
+  "conquista profissional",
+  "evolução profissional",
 ];
 
 const TYPING_SPEED = 80;
