@@ -148,7 +148,7 @@ const Index = () => {
               {/* Animated fake cursor */}
               <div className="pointer-events-none absolute animate-fake-cursor hidden md:block" aria-hidden="true">
                 <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M5 3L19 12L12 13.5L8.5 21L5 3Z" fill="hsl(var(--foreground))" stroke="hsl(var(--background))" strokeWidth="1.5"/>
+                  <path d="M5 3L19 12L12 13.5L8.5 21L5 3Z" fill="hsl(var(--primary))" stroke="hsl(var(--background))" strokeWidth="1.5"/>
                 </svg>
               </div>
             </div>
