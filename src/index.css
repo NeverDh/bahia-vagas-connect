@@ -125,3 +125,55 @@ All colors MUST be HSL.
 .animate-bounce-x {
   animation: bounce-x 1s ease-in-out infinite;
 }
+
+@keyframes fake-cursor {
+  0% {
+    opacity: 0;
+    transform: translate(-60px, -40px);
+  }
+  10% {
+    opacity: 1;
+    transform: translate(-60px, -40px);
+  }
+  /* Move towards button center */
+  40% {
+    opacity: 1;
+    transform: translate(0px, 0px);
+  }
+  /* Hover pause */
+  55% {
+    opacity: 1;
+    transform: translate(0px, 0px) scale(1);
+  }
+  /* Click down */
+  60% {
+    opacity: 1;
+    transform: translate(0px, 2px) scale(0.9);
+  }
+  /* Click up */
+  65% {
+    opacity: 1;
+    transform: translate(0px, 0px) scale(1);
+  }
+  /* Stay briefly */
+  80% {
+    opacity: 1;
+    transform: translate(0px, 0px);
+  }
+  /* Fade out */
+  90% {
+    opacity: 0;
+    transform: translate(10px, -10px);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-60px, -40px);
+  }
+}
+
+.animate-fake-cursor {
+  top: 50%;
+  right: -10px;
+  animation: fake-cursor 5s ease-in-out infinite;
+  will-change: transform, opacity;
+}
