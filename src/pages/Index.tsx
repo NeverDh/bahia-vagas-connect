@@ -135,15 +135,24 @@ const Index = () => {
               </Button>
             </div>
 
-            <Link to="/vagas" className="mt-6 inline-block">
-              <Button
-                size="lg"
-                className="group bg-accent hover:bg-accent/90 text-white font-bold uppercase tracking-wide rounded-lg px-10 h-12 transition-all duration-200 hover:scale-105 hover:shadow-lg"
-              >
-                VEJA AGORA TODAS AS VAGAS
-                <MousePointerClick className="ml-2 animate-bounce-x" size={20} />
-              </Button>
-            </Link>
+            <div className="mt-6 relative inline-block">
+              <Link to="/vagas">
+                <Button
+                  size="lg"
+                  id="cta-vagas-btn"
+                  className="group bg-accent hover:bg-accent/90 text-white font-bold uppercase tracking-wide rounded-lg px-10 h-12 transition-all duration-200 hover:scale-105 hover:shadow-lg"
+                >
+                  VEJA AGORA TODAS AS VAGAS
+                  <MousePointerClick className="ml-2 animate-bounce-x" size={20} />
+                </Button>
+              </Link>
+              {/* Animated fake cursor */}
+              <div className="pointer-events-none absolute animate-fake-cursor hidden md:block" aria-hidden="true">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M5 3L19 12L12 13.5L8.5 21L5 3Z" fill="hsl(var(--foreground))" stroke="hsl(var(--background))" strokeWidth="1.5"/>
+                </svg>
+              </div>
+            </div>
           </div>
         </div>
         
