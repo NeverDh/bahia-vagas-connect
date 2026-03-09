@@ -172,8 +172,8 @@ All colors MUST be HSL.
 }
 
 .animate-fake-cursor {
-  top: 50%;
-  right: -10px;
+  top: -20px;
+  right: 20px;
   animation: fake-cursor 5s ease-in-out infinite;
   will-change: transform, opacity;
 }
