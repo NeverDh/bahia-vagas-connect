@@ -159,7 +159,7 @@ const Index = () => {
                 <Link
                   key={page.slug}
                   to={`/vagas-${page.slug}`}
-                  className="flex items-center justify-center text-center text-xs px-2 py-3 h-16 sm:h-14 border bg-white hover:bg-primary transition-colors font-medium leading-tight sm:text-xs font-sans opacity-90 border-solid rounded-xl text-muted-foreground border-muted-foreground">
+                  className="flex items-center justify-center text-center text-xs px-2 py-3 h-16 sm:h-14 border bg-white hover:bg-primary hover:text-white transition-colors font-medium leading-tight sm:text-xs font-sans opacity-90 border-solid rounded-xl text-muted-foreground border-muted-foreground">
                   
                   {page.h1}
                 </Link>
