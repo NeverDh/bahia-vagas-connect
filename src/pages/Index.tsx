@@ -9,17 +9,17 @@ import { AdBanner } from "@/components/AdBanner";
 import { seoJobPages } from "@/lib/seo-job-pages";
 
 const TYPEWRITER_WORDS = [
-  "oportunidade",
-  "vaga",
-  "chance profissional",
-  "posição",
-  "colocação",
-  "experiência profissional",
-  "etapa profissional",
-  "jornada profissional",
-  "conquista profissional",
-  "evolução profissional",
-];
+"oportunidade",
+"vaga",
+"chance profissional",
+"posição",
+"colocação",
+"experiência profissional",
+"etapa profissional",
+"jornada profissional",
+"conquista profissional",
+"evolução profissional"];
+
 
 const TYPING_SPEED = 80;
 const DELETING_SPEED = 50;
@@ -103,8 +103,8 @@ const Index = () => {
             <div className="flex flex-col sm:flex-row gap-3 max-w-2xl mx-auto">
               <div className="flex-1 relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground pointer-events-none" />
-                <Input 
-                  placeholder="Cargo, palavra-chave ou empresa" 
+                <Input
+                  placeholder="Cargo, palavra-chave ou empresa"
                   className="pl-10 h-12"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
@@ -113,13 +113,13 @@ const Index = () => {
                       e.preventDefault();
                       handleSubmitSearch();
                     }
-                  }}
-                />
+                  }} />
+                
               </div>
               <div className="flex-1 relative">
                 <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground pointer-events-none" />
-                <Input 
-                  placeholder="Cidade ou região" 
+                <Input
+                  placeholder="Cidade ou região"
                   className="pl-10 h-12"
                   value={locationTerm}
                   onChange={(e) => setLocationTerm(e.target.value)}
@@ -128,8 +128,8 @@ const Index = () => {
                       e.preventDefault();
                       handleSubmitSearch();
                     }
-                  }}
-                />
+                  }} />
+                
               </div>
               <Button type="button" size="lg" className="w-full sm:w-auto h-12 px-8" onClick={handleSubmitSearch}>
                 Buscar Vagas
@@ -141,29 +141,29 @@ const Index = () => {
                 <Button
                   size="lg"
                   id="cta-vagas-btn"
-                  className="group bg-accent hover:bg-accent/90 text-white font-bold uppercase tracking-wide rounded-lg px-10 h-12 transition-all duration-200 hover:scale-105 hover:shadow-lg"
-                >
+                  className="group bg-accent hover:bg-accent/90 text-white font-bold uppercase tracking-wide rounded-lg px-10 h-12 transition-all duration-200 hover:scale-105 hover:shadow-lg">
+                  
                   VEJA AGORA TODAS AS VAGAS
                 </Button>
               </Link>
               {/* Animated fake cursor */}
               <div className="pointer-events-none absolute animate-fake-cursor hidden md:block" aria-hidden="true">
                 <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M5 3L19 12L12 13.5L8.5 21L5 3Z" fill="hsl(var(--primary))" stroke="hsl(var(--background))" strokeWidth="1.5"/>
+                  <path d="M5 3L19 12L12 13.5L8.5 21L5 3Z" fill="hsl(var(--primary))" stroke="hsl(var(--background))" strokeWidth="1.5" />
                 </svg>
             </div>
 
             {/* SEO Job Pages Links */}
             <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 mt-12 w-full max-w-3xl mx-auto">
-              {seoJobPages.map((page) => (
+              {seoJobPages.map((page) =>
                 <Link
                   key={page.slug}
                   to={`/vagas-${page.slug}`}
-                  className="flex items-center justify-center text-center text-xs sm:text-sm px-2 py-3 h-16 sm:h-14 rounded-lg border border-primary bg-white text-primary hover:bg-primary hover:text-white transition-colors font-medium leading-tight"
-                >
+                  className="flex items-center justify-center text-center text-xs px-2 py-3 h-16 sm:h-14 border bg-white hover:bg-primary transition-colors font-medium leading-tight text-secondary-foreground rounded sm:text-xs font-sans border-primary">
+                  
                   {page.h1}
                 </Link>
-              ))}
+                )}
             </div>
             </div>
           </div>
@@ -259,8 +259,8 @@ const Index = () => {
       
       {/* Spacer for mobile ad banner */}
       <div className="h-24 xl:hidden" />
-    </MainLayout>
-  );
+    </MainLayout>);
+
 };
 
 export default Index;
