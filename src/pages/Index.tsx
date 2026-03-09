@@ -6,6 +6,7 @@ import { Search, Briefcase, Users, TrendingUp, MapPin, MousePointerClick } from 
 import { Link, useNavigate } from "react-router-dom";
 import { RecentJobsByCity } from "@/components/RecentJobsByCity";
 import { AdBanner } from "@/components/AdBanner";
+import { seoJobPages } from "@/lib/seo-job-pages";
 
 const TYPEWRITER_WORDS = [
   "oportunidade",
