@@ -154,14 +154,14 @@ const Index = () => {
             </div>
 
             {/* SEO Job Pages Links */}
-            <div className="flex flex-wrap justify-center gap-2 mt-6">
+            <div className="flex flex-col items-center gap-2 mt-6 max-w-md mx-auto">
               {seoJobPages.map((page) => (
                 <Link
                   key={page.slug}
                   to={`/vagas-${page.slug}`}
-                  className="text-sm px-3 py-1.5 rounded-full border border-accent/30 bg-accent/5 text-accent hover:bg-accent hover:text-accent-foreground transition-colors font-medium"
+                  className="w-full text-center text-sm px-4 py-2 rounded-lg border border-accent/30 bg-accent/5 text-accent hover:bg-accent hover:text-accent-foreground transition-colors font-medium"
                 >
-                  {page.h1.replace("Vagas ", "").replace("Vagas de ", "").replace("Vagas para ", "")}
+                  {page.h1}
                 </Link>
               ))}
             </div>
