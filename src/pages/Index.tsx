@@ -154,12 +154,12 @@ const Index = () => {
             </div>
 
             {/* SEO Job Pages Links */}
-            <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 mt-6 w-full max-w-3xl mx-auto">
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 mt-12 w-full max-w-3xl mx-auto">
               {seoJobPages.map((page) => (
                 <Link
                   key={page.slug}
                   to={`/vagas-${page.slug}`}
-                  className="flex items-center justify-center text-center text-xs sm:text-sm px-2 py-3 h-16 sm:h-14 rounded-lg border border-accent/30 bg-accent/5 text-accent hover:bg-accent hover:text-accent-foreground transition-colors font-medium leading-tight"
+                  className="flex items-center justify-center text-center text-xs sm:text-sm px-2 py-3 h-16 sm:h-14 rounded-lg bg-accent text-white hover:bg-accent/90 transition-colors font-medium leading-tight"
                 >
                   {page.h1}
                 </Link>
