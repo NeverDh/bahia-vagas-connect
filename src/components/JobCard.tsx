@@ -47,6 +47,8 @@ const experienceLevelLabels: Record<string, string> = {
 };
 
 export const JobCard = ({ job, hasApplied = false }: JobCardProps) => {
+  const viewed = isJobViewed(job.id);
+
   const formatSalary = () => {
     if (!job.salary_min && !job.salary_max) return "A combinar";
     if (job.salary_min && job.salary_max) {
@@ -57,7 +59,7 @@ export const JobCard = ({ job, hasApplied = false }: JobCardProps) => {
 
   return (
     <Link to={`/vaga/${job.id}`}>
-      <Card className="p-6 hover:shadow-[var(--shadow-hover)] transition-all duration-300 cursor-pointer border border-border bg-card">
+      <Card className={`p-6 hover:shadow-[var(--shadow-hover)] transition-all duration-300 cursor-pointer border border-border bg-card ${viewed ? "opacity-80" : ""}`}>
         <div className="flex items-start gap-4">
           {job.companies?.logo_url && (
             <img 
