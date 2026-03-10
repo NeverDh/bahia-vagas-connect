@@ -1,9 +1,10 @@
 import { Card } from "./ui/card";
 import { Badge } from "./ui/badge";
-import { MapPin, Briefcase, DollarSign, Clock, CheckCircle2 } from "lucide-react";
+import { MapPin, Briefcase, DollarSign, Clock, CheckCircle2, Eye } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Link } from "react-router-dom";
+import { isJobViewed } from "@/hooks/useViewedJobs";
 
 interface JobCardProps {
   job: {
@@ -46,6 +47,8 @@ const experienceLevelLabels: Record<string, string> = {
 };
 
 export const JobCard = ({ job, hasApplied = false }: JobCardProps) => {
+  const viewed = isJobViewed(job.id);
+
   const formatSalary = () => {
     if (!job.salary_min && !job.salary_max) return "A combinar";
     if (job.salary_min && job.salary_max) {
@@ -56,7 +59,7 @@ export const JobCard = ({ job, hasApplied = false }: JobCardProps) => {
 
   return (
     <Link to={`/vaga/${job.id}`}>
-      <Card className="p-6 hover:shadow-[var(--shadow-hover)] transition-all duration-300 cursor-pointer border border-border bg-card">
+      <Card className={`p-6 hover:shadow-[var(--shadow-hover)] transition-all duration-300 cursor-pointer border border-border bg-card ${viewed ? "opacity-80" : ""}`}>
         <div className="flex items-start gap-4">
           {job.companies?.logo_url && (
             <img 
@@ -74,6 +77,12 @@ export const JobCard = ({ job, hasApplied = false }: JobCardProps) => {
                 </h3>
                 <p className="text-sm text-muted-foreground">{job.companies?.name}</p>
               </div>
+              {viewed && (
+                <Badge variant="outline" className="gap-1 text-muted-foreground border-muted-foreground/40">
+                  <Eye className="h-3 w-3" />
+                  Visualizada
+                </Badge>
+              )}
               {hasApplied && (
                 <Badge variant="default" className="gap-1 bg-primary text-primary-foreground">
                   <CheckCircle2 className="h-3 w-3" />

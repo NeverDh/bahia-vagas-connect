@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { MainLayout } from "@/components/MainLayout";
@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { ApplicationForm } from "@/components/ApplicationForm";
 import { AdBanner } from "@/components/AdBanner";
+import { markJobAsViewed } from "@/hooks/useViewedJobs";
 
 const contractTypeLabels: Record<string, string> = {
   clt: "CLT",
@@ -96,6 +97,7 @@ const JobDetails = () => {
         }
 
         setJob(data as Job);
+        markJobAsViewed(data.id);
       } catch (error) {
         console.error("Error fetching job:", error);
         toast.error("Erro ao carregar vaga");
