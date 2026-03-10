@@ -1,9 +1,10 @@
 import { Card } from "./ui/card";
 import { Badge } from "./ui/badge";
-import { MapPin, Briefcase, DollarSign, Clock, CheckCircle2 } from "lucide-react";
+import { MapPin, Briefcase, DollarSign, Clock, CheckCircle2, Eye } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Link } from "react-router-dom";
+import { isJobViewed } from "@/hooks/useViewedJobs";
 
 interface JobCardProps {
   job: {
