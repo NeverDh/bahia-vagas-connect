@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
-const BASE_URL = "https://bahia-vagas-connect.lovable.app";
+const BASE_URL = "https://bahiavagas.com";
 
 const bahiaMunicipios: Record<string, string> = {
   "abaira": "Abaíra", "abare": "Abaré", "acajutiba": "Acajutiba", "adustina": "Adustina",

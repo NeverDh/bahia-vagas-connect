@@ -13,4 +13,4 @@ Allow: /
 User-agent: *
 Allow: /
 
-Sitemap: https://amulcuaokredqksqokvp.supabase.co/functions/v1/sitemap
+Sitemap: https://bahiavagas.com/sitemap.xml

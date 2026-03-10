@@ -36,13 +36,11 @@ function useTypewriter(words: string[]) {
     const currentWord = words[wordIndex];
 
     if (!isDeleting && charIndex === currentWord.length) {
-      // Pause after finishing typing
       const timeout = setTimeout(() => setIsDeleting(true), PAUSE_AFTER_TYPING);
       return () => clearTimeout(timeout);
     }
 
     if (isDeleting && charIndex === 0) {
-      // Move to next word after deleting
       const nextIndex = (wordIndex + 1) % words.length;
       setWordIndex(nextIndex);
       setIsDeleting(false);
@@ -88,16 +86,17 @@ const Index = () => {
         <div className="container px-4 py-16 md:py-28 relative z-10">
           <div className="max-w-3xl mx-auto text-center space-y-8">
             <h1 className="text-4xl md:text-6xl font-bold leading-tight">
-              Encontre sua próxima{" "}
+              Vagas de Emprego na Bahia{" "}
               <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                {typedWord}
+                Atualizadas Todos os Dias
               </span>
-              <span className="inline-block w-[3px] h-[0.9em] bg-primary align-middle ml-0.5 animate-[blink_1s_step-end_infinite]" />
-              {" "}na Bahia
             </h1>
             
             <p className="text-lg md:text-xl text-muted-foreground">
-              Conectamos talentos baianos com as melhores empresas da região
+              Encontre sua próxima{" "}
+              <span className="font-semibold text-foreground">{typedWord}</span>
+              <span className="inline-block w-[3px] h-[0.9em] bg-primary align-middle ml-0.5 animate-[blink_1s_step-end_infinite]" />
+              {" "}— conectamos talentos baianos com as melhores empresas da região
             </p>
             
             <div className="flex flex-col sm:flex-row gap-3 max-w-2xl mx-auto">
@@ -114,7 +113,6 @@ const Index = () => {
                       handleSubmitSearch();
                     }
                   }} />
-                
               </div>
               <div className="flex-1 relative">
                 <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground pointer-events-none" />
@@ -129,7 +127,6 @@ const Index = () => {
                       handleSubmitSearch();
                     }
                   }} />
-                
               </div>
               <Button type="button" size="lg" className="w-full sm:w-auto h-12 px-8" onClick={handleSubmitSearch}>
                 Buscar Vagas
@@ -153,17 +150,22 @@ const Index = () => {
               </div>
             </div>
 
-            {/* SEO Job Pages Links */}
-            <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 mt-12 w-full max-w-3xl mx-auto">
-              {seoJobPages.map((page) =>
-                <Link
-                  key={page.slug}
-                  to={`/vagas-${page.slug}`}
-                  className="flex items-center justify-center text-center text-xs px-2 py-3 h-16 sm:h-14 border bg-white hover:bg-primary hover:text-white transition-colors font-medium leading-tight sm:text-xs font-sans opacity-90 border-solid rounded-xl text-muted-foreground border-muted-foreground">
-                  
-                  {page.h1}
-                </Link>
+            {/* SEO Job Pages Links - H2: Vagas por Área Profissional */}
+            <div className="mt-12 w-full max-w-3xl mx-auto">
+              <h2 className="text-xl md:text-2xl font-bold text-center mb-6">
+                <span className="text-primary">Vagas por </span>
+                <span className="text-accent">Área Profissional</span>
+              </h2>
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+                {seoJobPages.map((page) =>
+                  <Link
+                    key={page.slug}
+                    to={`/vagas-${page.slug}`}
+                    className="flex items-center justify-center text-center text-xs px-2 py-3 h-16 sm:h-14 border bg-white hover:bg-primary hover:text-white transition-colors font-medium leading-tight sm:text-xs font-sans opacity-90 border-solid rounded-xl text-muted-foreground border-muted-foreground">
+                    {page.h1}
+                  </Link>
                 )}
+              </div>
             </div>
           </div>
         </div>
@@ -181,6 +183,10 @@ const Index = () => {
       {/* Stats Section */}
       <section className="py-16 border-y border-accent">
         <div className="container px-4">
+          <h2 className="text-2xl md:text-3xl font-bold text-center mb-10">
+            <span className="text-primary">Empresas que Estão </span>
+            <span className="text-accent">Contratando na Bahia</span>
+          </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="text-center space-y-2">
               <div className="flex justify-center">
@@ -218,10 +224,47 @@ const Index = () => {
       {/* Recent Jobs by City */}
       <RecentJobsByCity />
 
-      {/* Ad between jobs and CTA - visible on all devices */}
+      {/* Ad between jobs and SEO section */}
       <div className="container px-4 py-4">
         <AdBanner variant="horizontal" slot="auto" className="max-w-4xl mx-auto" />
       </div>
+
+      {/* SEO Text Section - Como Encontrar Emprego na Bahia */}
+      <section className="py-16 bg-muted/30">
+        <div className="container px-4">
+          <div className="max-w-4xl mx-auto">
+            <h2 className="text-2xl md:text-3xl font-bold text-center mb-8">
+              <span className="text-primary">Como Encontrar Emprego </span>
+              <span className="text-accent">na Bahia Mais Rápido</span>
+            </h2>
+            <div className="prose prose-lg max-w-none text-muted-foreground space-y-4">
+              <p>
+                O mercado de trabalho na Bahia está em constante crescimento, com oportunidades em setores como comércio, serviços, tecnologia, saúde, logística e indústria. Cidades como Salvador, Feira de Santana, Vitória da Conquista, Camaçari e Lauro de Freitas concentram grande parte das vagas disponíveis, mas há oportunidades em todo o estado.
+              </p>
+              <p>
+                O BahiaVagas é o portal mais completo para quem busca emprego na Bahia. Reunimos vagas atualizadas diariamente, direto das empresas que estão contratando. Seja você um profissional experiente ou alguém em busca do primeiro emprego, aqui você encontra oportunidades reais para todas as áreas e níveis de experiência.
+              </p>
+              <p>
+                Para encontrar emprego mais rápido, recomendamos que você cadastre seu currículo, acompanhe as vagas diariamente e explore as categorias mais procuradas:
+                {" "}<Link to="/vagas-sem-experiencia" className="text-primary hover:underline font-medium">vagas sem experiência</Link>,
+                {" "}<Link to="/vagas-jovem-aprendiz" className="text-primary hover:underline font-medium">vagas de jovem aprendiz</Link>,
+                {" "}<Link to="/vagas-home-office" className="text-primary hover:underline font-medium">vagas home office</Link>,
+                {" "}<Link to="/vagas-estagio" className="text-primary hover:underline font-medium">vagas de estágio</Link> e
+                {" "}<Link to="/vagas-auxiliar-administrativo" className="text-primary hover:underline font-medium">vagas de auxiliar administrativo</Link>.
+                Além dessas, temos vagas para{" "}
+                <Link to="/vagas-vendedor" className="text-primary hover:underline font-medium">vendedor</Link>,
+                {" "}<Link to="/vagas-atendente" className="text-primary hover:underline font-medium">atendente</Link>,
+                {" "}<Link to="/vagas-atendimento-ao-cliente" className="text-primary hover:underline font-medium">atendimento ao cliente</Link>,
+                {" "}<Link to="/vagas-logistica" className="text-primary hover:underline font-medium">logística</Link> e
+                {" "}<Link to="/vagas-meio-periodo" className="text-primary hover:underline font-medium">meio período</Link>.
+              </p>
+              <p>
+                Não perca tempo: acesse as vagas, candidate-se e dê o próximo passo na sua carreira profissional. O BahiaVagas conecta você às melhores oportunidades do estado, de forma rápida, gratuita e segura.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
 
       {/* CTA Section */}
       <section className="py-20">

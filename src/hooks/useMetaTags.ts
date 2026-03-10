@@ -41,7 +41,7 @@ export const useMetaTags = () => {
         canonical.setAttribute("rel", "canonical");
         document.head.appendChild(canonical);
       }
-      canonical.setAttribute("href", `https://bahia-vagas-connect.lovable.app${location.pathname}`);
+      canonical.setAttribute("href", `https://bahiavagas.com${location.pathname}`);
     };
 
     // Always set canonical, even without meta_tags data
@@ -51,7 +51,7 @@ export const useMetaTags = () => {
       canonical.setAttribute("rel", "canonical");
       document.head.appendChild(canonical);
     }
-    canonical.setAttribute("href", `https://bahia-vagas-connect.lovable.app${location.pathname}`);
+    canonical.setAttribute("href", `https://bahiavagas.com${location.pathname}`);
 
     applyMetaTags();
   }, [location.pathname]);
