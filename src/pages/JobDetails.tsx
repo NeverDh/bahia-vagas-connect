@@ -97,6 +97,7 @@ const JobDetails = () => {
         }
 
         setJob(data as Job);
+        markJobAsViewed(data.id);
       } catch (error) {
         console.error("Error fetching job:", error);
         toast.error("Erro ao carregar vaga");

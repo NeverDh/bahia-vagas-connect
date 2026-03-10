@@ -77,6 +77,12 @@ export const JobCard = ({ job, hasApplied = false }: JobCardProps) => {
                 </h3>
                 <p className="text-sm text-muted-foreground">{job.companies?.name}</p>
               </div>
+              {viewed && (
+                <Badge variant="outline" className="gap-1 text-muted-foreground border-muted-foreground/40">
+                  <Eye className="h-3 w-3" />
+                  Visualizada
+                </Badge>
+              )}
               {hasApplied && (
                 <Badge variant="default" className="gap-1 bg-primary text-primary-foreground">
                   <CheckCircle2 className="h-3 w-3" />
