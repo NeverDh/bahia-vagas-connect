@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { ApplicationForm } from "@/components/ApplicationForm";
 import { AdBanner } from "@/components/AdBanner";
+import { markJobAsViewed } from "@/hooks/useViewedJobs";
 
 const contractTypeLabels: Record<string, string> = {
   clt: "CLT",
