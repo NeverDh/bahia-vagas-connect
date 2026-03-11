@@ -55,6 +55,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [userRole, setUserRole] = useState<UserRole | null>(null);
+  const navigate = useNavigate();
   const { toast } = useToast();
   const profileCheckedRef = useRef<string | null>(null);
 
