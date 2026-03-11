@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 
@@ -6,24 +6,19 @@ export const useAdmin = () => {
   const { user, loading: authLoading } = useAuth();
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [checkedUserId, setCheckedUserId] = useState<string | null>(null);
+  const checkedUserIdRef = useRef<string | null>(null);
 
   useEffect(() => {
-    if (authLoading) {
-      return;
-    }
+    if (authLoading) return;
 
     if (!user) {
       setIsAdmin(false);
       setLoading(false);
-      setCheckedUserId(null);
+      checkedUserIdRef.current = null;
       return;
     }
 
-    // Skip re-check if we already verified this user
-    if (checkedUserId === user.id) {
-      return;
-    }
+    if (checkedUserIdRef.current === user.id) return;
 
     const checkAdminRole = async () => {
       setLoading(true);
@@ -39,7 +34,7 @@ export const useAdmin = () => {
         } else {
           setIsAdmin(data === true);
         }
-        setCheckedUserId(user.id);
+        checkedUserIdRef.current = user.id;
       } catch (error) {
         console.error("Error checking admin role:", error);
         setIsAdmin(false);
@@ -49,7 +44,7 @@ export const useAdmin = () => {
     };
 
     checkAdminRole();
-  }, [user, authLoading, checkedUserId]);
+  }, [user, authLoading]);
 
   return { isAdmin, loading };
 };
