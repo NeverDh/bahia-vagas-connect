@@ -35,7 +35,7 @@ const EMAIL_TEMPLATES: Record<string, React.ComponentType<any>> = {
 }
 
 // Configuration
-const SITE_NAME = "bahia-vagas-connect"
+const SITE_NAME = "BahiaVagas"
 const SENDER_DOMAIN = "notify.bahiavagas.com"
 const ROOT_DOMAIN = "bahiavagas.com"
 const FROM_DOMAIN = "bahiavagas.com" // Domain shown in From address (may be root or sender subdomain)
