@@ -281,6 +281,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         description: "Bem-vindo de volta.",
       });
 
+      navigate("/");
       return { data, error: null };
     },
     signOut: async () => {
