@@ -302,6 +302,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         description: "Até logo!",
       });
 
+      navigate("/");
       return { error: null };
     },
   };
