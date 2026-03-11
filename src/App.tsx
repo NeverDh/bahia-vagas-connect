@@ -48,35 +48,37 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <CookieConsent />
-          <CookieGuard>
-            <MetaTagsProvider>
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/vagas" element={<Jobs />} />
-                {seoJobPages.map((page) => (
-                  <Route key={page.slug} path={`/vagas-${page.slug}`} element={<JobsByCategory page={page} />} />
-                ))}
-                {Object.entries(bahiaMunicipios).map(([slug, name]) => (
-                  <Route key={slug} path={`/vagas-${slug}`} element={<JobsByCity cityName={name} />} />
-                ))}
-                <Route path="/vaga/:id" element={<JobDetails />} />
-                <Route path="/empresas" element={<Companies />} />
-                <Route path="/perfil" element={<Profile />} />
-                <Route path="/empresa/dashboard" element={<CompanyDashboard />} />
-                <Route path="/admin" element={<Admin />} />
-                <Route path="/auth" element={<Auth />} />
-                <Route path="/urls" element={<SiteUrls />} />
-                <Route path="/blog" element={<Blog />} />
-                <Route path="/blog/:slug" element={<BlogPost />} />
-                <Route path="/privacidade" element={<PrivacyPolicy />} />
-                <Route path="/cookies-necessarios" element={<CookiesNecessarios />} />
-                <Route path="/termos-de-uso" element={<TermosDeUso />} />
-                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </MetaTagsProvider>
-          </CookieGuard>
+          <AuthProvider>
+            <CookieConsent />
+            <CookieGuard>
+              <MetaTagsProvider>
+                <Routes>
+                  <Route path="/" element={<Index />} />
+                  <Route path="/vagas" element={<Jobs />} />
+                  {seoJobPages.map((page) => (
+                    <Route key={page.slug} path={`/vagas-${page.slug}`} element={<JobsByCategory page={page} />} />
+                  ))}
+                  {Object.entries(bahiaMunicipios).map(([slug, name]) => (
+                    <Route key={slug} path={`/vagas-${slug}`} element={<JobsByCity cityName={name} />} />
+                  ))}
+                  <Route path="/vaga/:id" element={<JobDetails />} />
+                  <Route path="/empresas" element={<Companies />} />
+                  <Route path="/perfil" element={<Profile />} />
+                  <Route path="/empresa/dashboard" element={<CompanyDashboard />} />
+                  <Route path="/admin" element={<Admin />} />
+                  <Route path="/auth" element={<Auth />} />
+                  <Route path="/urls" element={<SiteUrls />} />
+                  <Route path="/blog" element={<Blog />} />
+                  <Route path="/blog/:slug" element={<BlogPost />} />
+                  <Route path="/privacidade" element={<PrivacyPolicy />} />
+                  <Route path="/cookies-necessarios" element={<CookiesNecessarios />} />
+                  <Route path="/termos-de-uso" element={<TermosDeUso />} />
+                  {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </MetaTagsProvider>
+            </CookieGuard>
+          </AuthProvider>
         </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>
