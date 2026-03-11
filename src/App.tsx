@@ -26,6 +26,7 @@ import { useMetaTags } from "./hooks/useMetaTags";
 import JobsByCategory from "./pages/JobsByCategory";
 import { CookieConsent } from "./components/CookieConsent";
 import { CookieGuard } from "./components/CookieGuard";
+import { AuthProvider } from "./hooks/useAuth";
 
 const MetaTagsProvider = ({ children }: { children: React.ReactNode }) => {
   useMetaTags();
