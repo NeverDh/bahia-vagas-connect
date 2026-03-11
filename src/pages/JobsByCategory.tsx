@@ -45,7 +45,7 @@ const JobsByCategory = ({ page }: JobsByCategoryProps) => {
       canonical.setAttribute("rel", "canonical");
       document.head.appendChild(canonical);
     }
-    canonical.setAttribute("href", `https://bahia-vagas-connect.lovable.app/vagas-${page.slug}`);
+    canonical.setAttribute("href", `https://bahiavagas.com/vagas-${page.slug}`);
 
     return () => {
       document.title = "BahiaVagas";
