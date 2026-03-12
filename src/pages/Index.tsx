@@ -176,6 +176,9 @@ const Index = () => {
         <div className="absolute bottom-20 right-10 w-96 h-96 bg-accent/10 rounded-full blur-3xl pointer-events-none"></div>
       </section>
 
+      {/* Job Carousels - Vagas Recentes & Mais Pesquisadas */}
+      <JobCarouselSection />
+
       {/* Ad between hero and stats - all devices */}
       <div className="container px-4 py-4">
         <AdBanner variant="horizontal" slot="auto" className="max-w-4xl mx-auto" />
