@@ -4,11 +4,11 @@ import { User, LogOut, Menu, Shield } from "lucide-react";
 import logo from "@/assets/logo.png";
 import { useAuth } from "@/hooks/useAuth";
 import { useAdmin } from "@/hooks/useAdmin";
-import { useState } from "react";
+import { memo, useState } from "react";
 import { Sheet, SheetContent, SheetTrigger } from "./ui/sheet";
 import { ThemeToggle } from "./ThemeToggle";
 
-export const Header = () => {
+const HeaderComponent = () => {
   const { user, userRole, signOut } = useAuth();
   const { isAdmin } = useAdmin();
   const [open, setOpen] = useState(false);
@@ -115,3 +115,7 @@ export const Header = () => {
     </header>
   );
 };
+
+HeaderComponent.displayName = "Header";
+
+export const Header = memo(HeaderComponent);
