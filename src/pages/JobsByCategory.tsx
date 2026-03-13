@@ -7,6 +7,7 @@ import { AdBanner } from "@/components/AdBanner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { SeoJobPage, seoJobPages } from "@/lib/seo-job-pages";
+import { JobCarouselSection } from "@/components/JobCarouselSection";
 
 interface JobsByCategoryProps {
   page: SeoJobPage;
@@ -231,6 +232,9 @@ const JobsByCategory = ({ page }: JobsByCategoryProps) => {
             </Link>
           </div>
         </div>
+
+        {/* Job Carousels */}
+        <JobCarouselSection />
 
         <div className="h-24 xl:hidden" />
       </div>

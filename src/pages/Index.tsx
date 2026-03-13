@@ -81,10 +81,6 @@ const Index = () => {
 
   return (
     <MainLayout>
-      
-      {/* Job Carousels - Vagas Recentes & Mais Pesquisadas */}
-      <JobCarouselSection />
-
       {/* Hero Section */}
       <section className="relative overflow-hidden bg-gradient-to-br from-primary/5 via-background to-accent/5 mt-0 pt-0">
         <div className="container px-4 py-16 md:py-28 relative z-10">
@@ -136,6 +132,9 @@ const Index = () => {
                 Buscar Vagas
               </Button>
             </div>
+
+            {/* Job Carousels - Oportunidades em Destaque */}
+            <JobCarouselSection />
 
             <div className="mt-6 relative inline-block">
               <Link to="/vagas">
