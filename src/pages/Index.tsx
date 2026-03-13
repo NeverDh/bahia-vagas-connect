@@ -65,6 +65,7 @@ function useTypewriter(words: string[]) {
 const Index = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [locationTerm, setLocationTerm] = useState("");
+  const { recentJobs, popularJobs } = useJobCarouselData();
   const navigate = useNavigate();
   const typedWord = useTypewriter(TYPEWRITER_WORDS);
 
