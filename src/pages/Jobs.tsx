@@ -398,6 +398,9 @@ const Jobs = ({ initialLocation }: JobsProps = {}) => {
           </div>
         </div>
         
+        {/* Job Carousels */}
+        <JobCarouselSection />
+
         {/* Spacer for mobile ad banner */}
         <div className="h-24 xl:hidden" />
       </div>

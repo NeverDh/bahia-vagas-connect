@@ -233,6 +233,9 @@ const JobsByCategory = ({ page }: JobsByCategoryProps) => {
           </div>
         </div>
 
+        {/* Job Carousels */}
+        <JobCarouselSection />
+
         <div className="h-24 xl:hidden" />
       </div>
     </MainLayout>
