@@ -7,6 +7,7 @@ import { AdBanner } from "@/components/AdBanner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { SeoJobPage, seoJobPages } from "@/lib/seo-job-pages";
+import { JobCarouselSection } from "@/components/JobCarouselSection";
 
 interface JobsByCategoryProps {
   page: SeoJobPage;
