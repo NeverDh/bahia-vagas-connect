@@ -134,11 +134,21 @@ const Index = () => {
               </Button>
             </div>
 
-            {/* CTA - Ver todas as vagas */}
-            <div className="w-full flex justify-center mt-2">
-              <Button asChild size="lg" className="h-12 px-8">
-                <Link to="/vagas">Veja agora todas as vagas</Link>
-              </Button>
+            <div className="mt-6 relative inline-block">
+              <Link to="/vagas">
+                <Button
+                  size="lg"
+                  id="cta-vagas-btn"
+                  className="group bg-accent hover:bg-accent/90 text-white font-bold uppercase tracking-wide rounded-lg px-10 h-12 transition-all duration-200 hover:scale-105 hover:shadow-lg">
+                  VEJA AGORA TODAS AS VAGAS
+                </Button>
+              </Link>
+              {/* Animated fake cursor */}
+              <div className="pointer-events-none absolute top-1/2 right-4 -translate-y-1/2 animate-fake-cursor hidden md:block" aria-hidden="true">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M5 3L19 12L12 13.5L8.5 21L5 3Z" fill="hsl(var(--primary))" stroke="hsl(var(--background))" strokeWidth="1.5" />
+                </svg>
+              </div>
             </div>
 
             {/* Vagas Recentes */}
@@ -169,22 +179,7 @@ const Index = () => {
               <JobCarousel jobs={popularJobs} label="Vagas Mais Pesquisadas" />
             </div>
 
-            <div className="mt-6 relative inline-block">
-              <Link to="/vagas">
-                <Button
-                  size="lg"
-                  id="cta-vagas-btn"
-                  className="group bg-accent hover:bg-accent/90 text-white font-bold uppercase tracking-wide rounded-lg px-10 h-12 transition-all duration-200 hover:scale-105 hover:shadow-lg">
-                  VEJA AGORA TODAS AS VAGAS
-                </Button>
-              </Link>
-              {/* Animated fake cursor */}
-              <div className="pointer-events-none absolute top-1/2 right-4 -translate-y-1/2 animate-fake-cursor hidden md:block" aria-hidden="true">
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M5 3L19 12L12 13.5L8.5 21L5 3Z" fill="hsl(var(--primary))" stroke="hsl(var(--background))" strokeWidth="1.5" />
-                </svg>
-              </div>
-            </div>
+
           </div>
         </div>
         
