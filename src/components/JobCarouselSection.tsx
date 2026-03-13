@@ -71,12 +71,11 @@ function JobCarousel({ jobs, label }: { jobs: JobCard[]; label: string }) {
   );
 }
 
-export function JobCarouselSection() {
+export function useJobCarouselData() {
   const [recentJobs, setRecentJobs] = useState<JobCard[]>([]);
   const [popularJobs, setPopularJobs] = useState<JobCard[]>([]);
 
   const fetchJobs = useCallback(async () => {
-    // Recent jobs
     const { data: recent } = await supabase
       .from("jobs")
       .select("id, title, location, company_id, companies(name)")
@@ -95,7 +94,6 @@ export function JobCarouselSection() {
       );
     }
 
-    // Popular jobs (most applications)
     const { data: popular } = await supabase
       .from("jobs")
       .select("id, title, location, company_id, companies(name), applications(count)")
@@ -125,6 +123,14 @@ export function JobCarouselSection() {
   useEffect(() => {
     fetchJobs();
   }, [fetchJobs]);
+
+  return { recentJobs, popularJobs };
+}
+
+export { JobCarousel };
+
+export function JobCarouselSection() {
+  const { recentJobs, popularJobs } = useJobCarouselData();
 
   if (!recentJobs.length && !popularJobs.length) return null;
 
