@@ -14,6 +14,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { getSlugByMunicipio } from "@/lib/bahia-municipios";
+import { JobCarouselSection } from "@/components/JobCarouselSection";
 
 interface JobsProps {
   initialLocation?: string;
