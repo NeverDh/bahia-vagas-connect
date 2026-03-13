@@ -134,6 +134,13 @@ const Index = () => {
               </Button>
             </div>
 
+            {/* CTA - Ver todas as vagas */}
+            <div className="w-full flex justify-center mt-2">
+              <Button asChild size="lg" className="h-12 px-8">
+                <Link to="/vagas">Veja agora todas as vagas</Link>
+              </Button>
+            </div>
+
             {/* Vagas Recentes */}
             <div className="w-full max-w-3xl mx-auto">
               <JobCarousel jobs={recentJobs} label="Vagas Recentes" />
