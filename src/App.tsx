@@ -60,6 +60,9 @@ const App = () => (
                   {seoJobPages.map((page) => (
                     <Route key={page.slug} path={`/vagas-${page.slug}`} element={<JobsByCategory page={page} />} />
                   ))}
+                  {getAllProgrammaticPages().map((page) => (
+                    <Route key={page.slug} path={page.fullPath} element={<ProgrammaticSeoPage page={page} />} />
+                  ))}
                   {Object.entries(bahiaMunicipios).map(([slug, name]) => (
                     <Route key={slug} path={`/vagas-${slug}`} element={<JobsByCity cityName={name} />} />
                   ))}
