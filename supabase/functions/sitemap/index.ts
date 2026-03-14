@@ -169,7 +169,48 @@ serve(async () => {
     priority: "0.8",
   }));
 
-  const allUrls = [...staticUrls, ...seoJobUrls, ...municipioUrls];
+  // Programmatic SEO pages: profession × city and job-type × city
+  const professions = [
+    "vendedor", "auxiliar-administrativo", "recepcionista", "atendente",
+    "operador-de-caixa", "motorista", "estoquista", "analista-de-marketing",
+    "auxiliar-de-servicos-gerais", "telemarketing",
+  ];
+
+  const cities = [
+    "salvador", "feira-de-santana", "vitoria-da-conquista", "luis-eduardo-magalhaes",
+    "ilheus", "itabuna", "camacari", "juazeiro", "barreiras", "porto-seguro",
+  ];
+
+  const jobTypes = [
+    "emprego", "vaga", "trabalho", "vagas-hoje", "vagas-urgentes",
+    "sem-experiencia", "jovem-aprendiz", "home-office",
+  ];
+
+  const programmaticUrls: { loc: string; changefreq: string; priority: string }[] = [];
+
+  // Profession × City
+  for (const prof of professions) {
+    for (const city of cities) {
+      programmaticUrls.push({
+        loc: `/vagas-${prof}-${city}`,
+        changefreq: "daily",
+        priority: "0.75",
+      });
+    }
+  }
+
+  // Job Type × City
+  for (const jt of jobTypes) {
+    for (const city of cities) {
+      programmaticUrls.push({
+        loc: `/vagas-${jt}-${city}`,
+        changefreq: "daily",
+        priority: "0.7",
+      });
+    }
+  }
+
+  const allUrls = [...staticUrls, ...seoJobUrls, ...municipioUrls, ...programmaticUrls];
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
