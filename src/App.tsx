@@ -24,6 +24,8 @@ import { bahiaMunicipios } from "./lib/bahia-municipios";
 import { seoJobPages } from "./lib/seo-job-pages";
 import { useMetaTags } from "./hooks/useMetaTags";
 import JobsByCategory from "./pages/JobsByCategory";
+import ProgrammaticSeoPage from "./pages/ProgrammaticSeoPage";
+import { getAllProgrammaticPages } from "./lib/seo-programmatic";
 import { CookieConsent } from "./components/CookieConsent";
 import { CookieGuard } from "./components/CookieGuard";
 import { AuthProvider } from "./hooks/useAuth";
