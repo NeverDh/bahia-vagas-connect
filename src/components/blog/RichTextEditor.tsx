@@ -17,6 +17,7 @@ import { Input } from '@/components/ui/input';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useRef, useState, useCallback } from 'react';
+import { optimizeImage } from '@/lib/image-optimizer';
 import {
   Bold, Italic, Underline as UnderlineIcon, Strikethrough,
   Heading1, Heading2, Heading3, Heading4,
