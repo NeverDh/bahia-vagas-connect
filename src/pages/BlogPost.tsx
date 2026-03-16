@@ -108,11 +108,19 @@ const BlogPost = () => {
   const processedContent = useMemo(() => {
     if (!post) return '';
     let idx = 0;
-    return post.content.replace(/<(h[1-3])([^>]*)>/gi, (match, tag, attrs) => {
+    let html = post.content.replace(/<(h[1-3])([^>]*)>/gi, (match, tag, attrs) => {
       const id = `heading-${idx}`;
       idx++;
       return `<${tag}${attrs} id="${id}">`;
     });
+    // Add lazy loading and decoding to all content images
+    html = html.replace(/<img([^>]*)>/gi, (match, attrs) => {
+      if (!attrs.includes('loading=')) {
+        attrs += ' loading="lazy" decoding="async"';
+      }
+      return `<img${attrs}>`;
+    });
+    return html;
   }, [post]);
 
   const scrollToHeading = (id: string) => {
