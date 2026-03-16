@@ -124,7 +124,7 @@ export const RichTextEditor = ({ content, onChange }: RichTextEditorProps) => {
 
   return (
     <div className="border rounded-lg overflow-visible relative">
-      <div className="sticky top-0 z-20 flex flex-wrap gap-0.5 p-2 border-b bg-background shadow-sm rounded-t-lg">
+      <div className="sticky top-16 z-20 flex flex-wrap gap-0.5 p-2 border-b bg-background shadow-sm rounded-t-lg">
         <ToolBtn onClick={() => editor.chain().focus().undo().run()} title="Desfazer"><Undo className="h-4 w-4" /></ToolBtn>
         <ToolBtn onClick={() => editor.chain().focus().redo().run()} title="Refazer"><Redo className="h-4 w-4" /></ToolBtn>
         <div className="w-px bg-border mx-1" />
