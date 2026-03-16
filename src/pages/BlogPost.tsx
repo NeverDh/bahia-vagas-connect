@@ -235,9 +235,9 @@ const BlogPost = () => {
               </Button>
             </div>
 
-            {/* Article content */}
+            {/* Article content - lazy load images */}
             <div
-              className="prose prose-lg max-w-none dark:prose-invert prose-headings:text-foreground prose-p:text-foreground/90 prose-a:text-primary prose-img:rounded-lg"
+              className="prose prose-lg max-w-none dark:prose-invert prose-headings:text-foreground prose-p:text-foreground/90 prose-a:text-primary prose-img:rounded-lg [&_img]:max-w-full [&_img]:h-auto"
               dangerouslySetInnerHTML={{ __html: processedContent }}
             />
 
