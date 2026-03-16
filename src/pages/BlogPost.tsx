@@ -200,7 +200,14 @@ const BlogPost = () => {
           </div>
           {post.featured_image && (
             <div className="shrink-0 w-48 h-48 md:w-64 md:h-64 rounded-full overflow-hidden border-4 border-primary-foreground/20 shadow-xl">
-              <img src={post.featured_image} alt={post.title} className="w-full h-full object-cover" />
+              <img
+                src={post.featured_image}
+                alt={post.title}
+                className="w-full h-full object-cover"
+                width={1200}
+                height={675}
+                fetchPriority="high"
+              />
             </div>
           )}
         </div>
