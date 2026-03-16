@@ -11,6 +11,7 @@ import { RichTextEditor } from './RichTextEditor';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Save, Eye, X, Upload, Search } from 'lucide-react';
+import { optimizeImage } from '@/lib/image-optimizer';
 
 interface BlogPost {
   id?: string;
