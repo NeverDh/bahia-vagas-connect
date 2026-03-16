@@ -11,6 +11,7 @@ import { RichTextEditor } from './RichTextEditor';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Save, Eye, X, Upload, Search } from 'lucide-react';
+import { optimizeImage } from '@/lib/image-optimizer';
 
 interface BlogPost {
   id?: string;
@@ -107,9 +108,12 @@ export const BlogPostForm = ({ postId, onSaved, onCancel }: BlogPostFormProps) =
   const handleImageUpload = async (file: File) => {
     setUploadingImage(true);
     try {
-      const ext = file.name.split('.').pop();
-      const fileName = `featured/${Date.now()}.${ext}`;
-      const { error } = await supabase.storage.from('blog-images').upload(fileName, file);
+      toast.info('Otimizando imagem (1200x675, WEBP)...');
+      const { file: optimized, altText } = await optimizeImage(file, 'featured', post.title || 'blog');
+      const fileName = optimized.name;
+      const { error } = await supabase.storage.from('blog-images').upload(fileName, optimized, {
+        contentType: 'image/webp',
+      });
       if (error) throw error;
       const { data: urlData } = supabase.storage.from('blog-images').getPublicUrl(fileName);
       setPost(prev => ({
@@ -117,7 +121,8 @@ export const BlogPostForm = ({ postId, onSaved, onCancel }: BlogPostFormProps) =
         featured_image: urlData.publicUrl,
         og_image: prev.og_image || urlData.publicUrl,
       }));
-      toast.success('Imagem enviada');
+      const sizeKB = Math.round(optimized.size / 1024);
+      toast.success(`Imagem otimizada (${sizeKB} KB) e enviada`);
     } catch {
       toast.error('Erro ao enviar imagem');
     } finally {

@@ -108,11 +108,19 @@ const BlogPost = () => {
   const processedContent = useMemo(() => {
     if (!post) return '';
     let idx = 0;
-    return post.content.replace(/<(h[1-3])([^>]*)>/gi, (match, tag, attrs) => {
+    let html = post.content.replace(/<(h[1-3])([^>]*)>/gi, (match, tag, attrs) => {
       const id = `heading-${idx}`;
       idx++;
       return `<${tag}${attrs} id="${id}">`;
     });
+    // Add lazy loading and decoding to all content images
+    html = html.replace(/<img([^>]*)>/gi, (match, attrs) => {
+      if (!attrs.includes('loading=')) {
+        attrs += ' loading="lazy" decoding="async"';
+      }
+      return `<img${attrs}>`;
+    });
+    return html;
   }, [post]);
 
   const scrollToHeading = (id: string) => {
@@ -192,7 +200,14 @@ const BlogPost = () => {
           </div>
           {post.featured_image && (
             <div className="shrink-0 w-48 h-48 md:w-64 md:h-64 rounded-full overflow-hidden border-4 border-primary-foreground/20 shadow-xl">
-              <img src={post.featured_image} alt={post.title} className="w-full h-full object-cover" />
+              <img
+                src={post.featured_image}
+                alt={post.title}
+                className="w-full h-full object-cover"
+                width={1200}
+                height={675}
+                fetchPriority="high"
+              />
             </div>
           )}
         </div>
@@ -235,9 +250,9 @@ const BlogPost = () => {
               </Button>
             </div>
 
-            {/* Article content */}
+            {/* Article content - lazy load images */}
             <div
-              className="prose prose-lg max-w-none dark:prose-invert prose-headings:text-foreground prose-p:text-foreground/90 prose-a:text-primary prose-img:rounded-lg"
+              className="prose prose-lg max-w-none dark:prose-invert prose-headings:text-foreground prose-p:text-foreground/90 prose-a:text-primary prose-img:rounded-lg [&_img]:max-w-full [&_img]:h-auto"
               dangerouslySetInnerHTML={{ __html: processedContent }}
             />
 

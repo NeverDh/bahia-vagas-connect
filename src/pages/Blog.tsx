@@ -155,7 +155,15 @@ const Blog = () => {
                 <Link key={post.id} to={`/blog/${post.slug}`} className="group">
                   <Card className="overflow-hidden h-full transition-shadow hover:shadow-lg">
                     {post.featured_image ? (
-                      <img src={post.featured_image} alt={post.title} className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300" loading="lazy" />
+                      <img
+                        src={post.featured_image}
+                        alt={post.title}
+                        className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
+                        loading="lazy"
+                        decoding="async"
+                        width={400}
+                        height={300}
+                      />
                     ) : (
                       <div className="w-full h-48 bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
                         <span className="text-4xl">📝</span>
