@@ -63,12 +63,17 @@ export const RichTextEditor = ({ content, onChange }: RichTextEditorProps) => {
   const handleImageUpload = useCallback(async (file: File) => {
     setUploading(true);
     try {
-      const ext = file.name.split('.').pop();
-      const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${ext}`;
-      const { error } = await supabase.storage.from('blog-images').upload(fileName, file);
+      toast.info('Otimizando imagem (max 800px, WEBP)...');
+      const { file: optimized, altText } = await optimizeImage(file, 'content');
+      const fileName = optimized.name;
+      const { error } = await supabase.storage.from('blog-images').upload(fileName, optimized, {
+        contentType: 'image/webp',
+      });
       if (error) throw error;
       const { data: urlData } = supabase.storage.from('blog-images').getPublicUrl(fileName);
-      editor?.chain().focus().setImage({ src: urlData.publicUrl }).run();
+      editor?.chain().focus().setImage({ src: urlData.publicUrl, alt: altText }).run();
+      const sizeKB = Math.round(optimized.size / 1024);
+      toast.success(`Imagem otimizada (${sizeKB} KB)`);
     } catch (err) {
       toast.error('Erro ao enviar imagem');
     } finally {
