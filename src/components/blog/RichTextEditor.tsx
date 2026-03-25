@@ -12,8 +12,10 @@ import Underline from '@tiptap/extension-underline';
 import Youtube from '@tiptap/extension-youtube';
 import FontSize from '@tiptap/extension-font-size';
 import { TextStyle } from '@tiptap/extension-text-style';
+import { Color } from '@tiptap/extension-color';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useRef, useState, useCallback } from 'react';
@@ -24,7 +26,7 @@ import {
   List, ListOrdered, Quote, Code, Table as TableIcon,
   Image as ImageIcon, Youtube as YoutubeIcon, Link as LinkIcon,
   AlignLeft, AlignCenter, AlignRight, Undo, Redo, Minus,
-  AArrowUp, AArrowDown
+  AArrowUp, AArrowDown, Type, XCircle
 } from 'lucide-react';
 
 interface RichTextEditorProps {
@@ -35,6 +37,29 @@ interface RichTextEditorProps {
 export const RichTextEditor = ({ content, onChange }: RichTextEditorProps) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
+  const [colorPickerOpen, setColorPickerOpen] = useState(false);
+
+  const PRESET_COLORS = [
+    '#000000', '#434343', '#666666', '#999999', '#CCCCCC', '#FFFFFF',
+    '#FF0000', '#FF4D00', '#FF9900', '#FFCC00', '#FFFF00', '#99FF00',
+    '#00FF00', '#00FF99', '#00FFFF', '#0099FF', '#0000FF', '#9900FF',
+    '#FF00FF', '#FF0099', '#CC0000', '#994C00', '#996600', '#339933',
+  ];
+  const [recentColors, setRecentColors] = useState<string[]>([]);
+
+  const applyColor = (color: string) => {
+    editor?.chain().focus().setColor(color).run();
+    setRecentColors(prev => {
+      const filtered = prev.filter(c => c !== color);
+      return [color, ...filtered].slice(0, 6);
+    });
+    setColorPickerOpen(false);
+  };
+
+  const removeColor = () => {
+    editor?.chain().focus().unsetColor().run();
+    setColorPickerOpen(false);
+  };
 
   const editor = useEditor({
     extensions: [
@@ -52,6 +77,7 @@ export const RichTextEditor = ({ content, onChange }: RichTextEditorProps) => {
       Underline,
       TextStyle,
       FontSize,
+      Color,
       Youtube.configure({ width: 640, height: 360 }),
     ],
     content,
@@ -137,6 +163,77 @@ export const RichTextEditor = ({ content, onChange }: RichTextEditorProps) => {
         <ToolBtn onClick={() => editor.chain().focus().toggleItalic().run()} active={editor.isActive('italic')} title="Itálico"><Italic className="h-4 w-4" /></ToolBtn>
         <ToolBtn onClick={() => editor.chain().focus().toggleUnderline().run()} active={editor.isActive('underline')} title="Sublinhado"><UnderlineIcon className="h-4 w-4" /></ToolBtn>
         <ToolBtn onClick={() => editor.chain().focus().toggleStrike().run()} active={editor.isActive('strike')} title="Riscado"><Strikethrough className="h-4 w-4" /></ToolBtn>
+        <Popover open={colorPickerOpen} onOpenChange={setColorPickerOpen}>
+          <PopoverTrigger asChild>
+            <Button type="button" variant="ghost" size="icon" className="h-8 w-8 relative" title="Cor do texto">
+              <Type className="h-4 w-4" />
+              <span
+                className="absolute bottom-1 left-1/2 -translate-x-1/2 h-1 w-4 rounded-full"
+                style={{ backgroundColor: editor?.getAttributes('textStyle')?.color || 'currentColor' }}
+              />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-56 p-3" side="bottom" align="start">
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-medium text-foreground">Cor do texto</span>
+                <Button type="button" variant="ghost" size="sm" className="h-6 px-2 text-xs" onClick={removeColor}>
+                  <XCircle className="h-3 w-3 mr-1" /> Resetar
+                </Button>
+              </div>
+              <div className="grid grid-cols-6 gap-1.5">
+                {PRESET_COLORS.map(color => (
+                  <button
+                    key={color}
+                    type="button"
+                    className="h-6 w-6 rounded border border-border hover:scale-110 transition-transform cursor-pointer"
+                    style={{ backgroundColor: color }}
+                    onClick={() => applyColor(color)}
+                    title={color}
+                  />
+                ))}
+              </div>
+              {recentColors.length > 0 && (
+                <>
+                  <span className="text-xs text-muted-foreground">Recentes</span>
+                  <div className="flex gap-1.5">
+                    {recentColors.map(color => (
+                      <button
+                        key={color}
+                        type="button"
+                        className="h-6 w-6 rounded border border-border hover:scale-110 transition-transform cursor-pointer"
+                        style={{ backgroundColor: color }}
+                        onClick={() => applyColor(color)}
+                        title={color}
+                      />
+                    ))}
+                  </div>
+                </>
+              )}
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-muted-foreground">HEX:</span>
+                <input
+                  type="color"
+                  className="h-7 w-7 cursor-pointer border-0 p-0 rounded"
+                  value={editor?.getAttributes('textStyle')?.color || '#000000'}
+                  onChange={(e) => applyColor(e.target.value)}
+                />
+                <Input
+                  type="text"
+                  className="h-7 text-xs flex-1"
+                  placeholder="#000000"
+                  defaultValue={editor?.getAttributes('textStyle')?.color || ''}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      const val = (e.target as HTMLInputElement).value;
+                      if (/^#[0-9A-Fa-f]{6}$/.test(val)) applyColor(val);
+                    }
+                  }}
+                />
+              </div>
+            </div>
+          </PopoverContent>
+        </Popover>
         <div className="w-px bg-border mx-1" />
         <ToolBtn onClick={decreaseFontSize} title="Diminuir fonte"><AArrowDown className="h-4 w-4" /></ToolBtn>
         <span className="text-xs flex items-center px-1 text-muted-foreground min-w-[36px] justify-center">{editor?.getAttributes('textStyle')?.fontSize || '16px'}</span>
