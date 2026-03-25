@@ -37,8 +37,15 @@ interface RichTextEditorProps {
 export const RichTextEditor = ({ content, onChange }: RichTextEditorProps) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
+  const [colorPickerOpen, setColorPickerOpen] = useState(false);
 
-  const editor = useEditor({
+  const PRESET_COLORS = [
+    '#000000', '#434343', '#666666', '#999999', '#CCCCCC', '#FFFFFF',
+    '#FF0000', '#FF4D00', '#FF9900', '#FFCC00', '#FFFF00', '#99FF00',
+    '#00FF00', '#00FF99', '#00FFFF', '#0099FF', '#0000FF', '#9900FF',
+    '#FF00FF', '#FF0099', '#CC0000', '#994C00', '#996600', '#339933',
+  ];
+  const [recentColors, setRecentColors] = useState<string[]>([]);
     extensions: [
       StarterKit.configure({
         heading: { levels: [1, 2, 3, 4] },
