@@ -46,6 +46,22 @@ export const RichTextEditor = ({ content, onChange }: RichTextEditorProps) => {
     '#FF00FF', '#FF0099', '#CC0000', '#994C00', '#996600', '#339933',
   ];
   const [recentColors, setRecentColors] = useState<string[]>([]);
+
+  const applyColor = (color: string) => {
+    editor?.chain().focus().setColor(color).run();
+    setRecentColors(prev => {
+      const filtered = prev.filter(c => c !== color);
+      return [color, ...filtered].slice(0, 6);
+    });
+    setColorPickerOpen(false);
+  };
+
+  const removeColor = () => {
+    editor?.chain().focus().unsetColor().run();
+    setColorPickerOpen(false);
+  };
+
+  const editor = useEditor({
     extensions: [
       StarterKit.configure({
         heading: { levels: [1, 2, 3, 4] },
@@ -61,6 +77,7 @@ export const RichTextEditor = ({ content, onChange }: RichTextEditorProps) => {
       Underline,
       TextStyle,
       FontSize,
+      Color,
       Youtube.configure({ width: 640, height: 360 }),
     ],
     content,
