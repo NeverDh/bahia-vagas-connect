@@ -34,6 +34,7 @@ import { useAnalyticsTracker } from "./hooks/useAnalyticsTracker";
 
 const MetaTagsProvider = ({ children }: { children: React.ReactNode }) => {
   useMetaTags();
+  useAnalyticsTracker();
   return <>{children}</>;
 };
 
