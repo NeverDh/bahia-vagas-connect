@@ -29,9 +29,12 @@ import { getAllProgrammaticPages } from "./lib/seo-programmatic";
 import { CookieConsent } from "./components/CookieConsent";
 import { CookieGuard } from "./components/CookieGuard";
 import { AuthProvider } from "./hooks/useAuth";
+import Analytics from "./pages/Analytics";
+import { useAnalyticsTracker } from "./hooks/useAnalyticsTracker";
 
 const MetaTagsProvider = ({ children }: { children: React.ReactNode }) => {
   useMetaTags();
+  useAnalyticsTracker();
   return <>{children}</>;
 };
 
@@ -71,6 +74,7 @@ const App = () => (
                   <Route path="/perfil" element={<Profile />} />
                   <Route path="/empresa/dashboard" element={<CompanyDashboard />} />
                   <Route path="/admin" element={<Admin />} />
+                  <Route path="/admin/analytics" element={<Analytics />} />
                   <Route path="/auth" element={<Auth />} />
                   <Route path="/urls" element={<SiteUrls />} />
                   <Route path="/blog" element={<Blog />} />
