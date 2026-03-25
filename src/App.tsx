@@ -29,6 +29,8 @@ import { getAllProgrammaticPages } from "./lib/seo-programmatic";
 import { CookieConsent } from "./components/CookieConsent";
 import { CookieGuard } from "./components/CookieGuard";
 import { AuthProvider } from "./hooks/useAuth";
+import Analytics from "./pages/Analytics";
+import { useAnalyticsTracker } from "./hooks/useAnalyticsTracker";
 
 const MetaTagsProvider = ({ children }: { children: React.ReactNode }) => {
   useMetaTags();
