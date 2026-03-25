@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Shield, Briefcase, Building2, Users, Download, Trash2, RefreshCw, AlertTriangle, XCircle, FileText } from "lucide-react";
+import { Shield, Briefcase, Building2, Users, Download, Trash2, RefreshCw, AlertTriangle, XCircle, FileText, BarChart3 } from "lucide-react";
 import { AdminMetaTags } from "@/components/AdminMetaTags";
 import { AdminBlogManager } from "@/components/blog/AdminBlogManager";
 import { toast } from "sonner";
@@ -154,6 +154,10 @@ const Admin = () => {
             <Button variant="outline" onClick={fetchData} disabled={loadingData}>
               <RefreshCw className={`h-4 w-4 mr-2 ${loadingData ? 'animate-spin' : ''}`} />
               Atualizar
+            </Button>
+            <Button onClick={() => navigate("/admin/analytics")} className="gap-2">
+              <BarChart3 className="h-4 w-4" />
+              Analytics
             </Button>
           </div>
 
