@@ -30,7 +30,7 @@ const Analytics = () => {
   const [sessions, setSessions] = useState<any[]>([]);
   const [pageViews, setPageViews] = useState<any[]>([]);
   const [refreshing, setRefreshing] = useState(false);
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     if (!authLoading && !user) { navigate("/auth"); return; }
