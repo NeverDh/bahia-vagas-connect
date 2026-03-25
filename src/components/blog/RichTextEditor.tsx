@@ -12,8 +12,10 @@ import Underline from '@tiptap/extension-underline';
 import Youtube from '@tiptap/extension-youtube';
 import FontSize from '@tiptap/extension-font-size';
 import { TextStyle } from '@tiptap/extension-text-style';
+import { Color } from '@tiptap/extension-color';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useRef, useState, useCallback } from 'react';
@@ -24,7 +26,7 @@ import {
   List, ListOrdered, Quote, Code, Table as TableIcon,
   Image as ImageIcon, Youtube as YoutubeIcon, Link as LinkIcon,
   AlignLeft, AlignCenter, AlignRight, Undo, Redo, Minus,
-  AArrowUp, AArrowDown
+  AArrowUp, AArrowDown, Type, XCircle
 } from 'lucide-react';
 
 interface RichTextEditorProps {
