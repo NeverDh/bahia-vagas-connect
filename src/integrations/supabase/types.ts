@@ -14,6 +14,124 @@ export type Database = {
   }
   public: {
     Tables: {
+      analytics_page_views: {
+        Row: {
+          duration_seconds: number | null
+          id: string
+          page_title: string | null
+          page_url: string
+          session_id: string
+          viewed_at: string
+        }
+        Insert: {
+          duration_seconds?: number | null
+          id?: string
+          page_title?: string | null
+          page_url: string
+          session_id: string
+          viewed_at?: string
+        }
+        Update: {
+          duration_seconds?: number | null
+          id?: string
+          page_title?: string | null
+          page_url?: string
+          session_id?: string
+          viewed_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "analytics_page_views_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "analytics_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      analytics_sessions: {
+        Row: {
+          browser: string | null
+          city: string | null
+          country: string | null
+          device: string | null
+          ended_at: string | null
+          id: string
+          is_admin: boolean
+          os: string | null
+          referrer: string | null
+          region: string | null
+          started_at: string
+          visitor_id: string
+        }
+        Insert: {
+          browser?: string | null
+          city?: string | null
+          country?: string | null
+          device?: string | null
+          ended_at?: string | null
+          id?: string
+          is_admin?: boolean
+          os?: string | null
+          referrer?: string | null
+          region?: string | null
+          started_at?: string
+          visitor_id: string
+        }
+        Update: {
+          browser?: string | null
+          city?: string | null
+          country?: string | null
+          device?: string | null
+          ended_at?: string | null
+          id?: string
+          is_admin?: boolean
+          os?: string | null
+          referrer?: string | null
+          region?: string | null
+          started_at?: string
+          visitor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "analytics_sessions_visitor_id_fkey"
+            columns: ["visitor_id"]
+            isOneToOne: false
+            referencedRelation: "analytics_visitors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      analytics_visitors: {
+        Row: {
+          first_visit: string
+          id: string
+          ip_hash: string
+          is_admin: boolean
+          is_returning: boolean
+          last_visit: string
+          visit_count: number
+        }
+        Insert: {
+          first_visit?: string
+          id?: string
+          ip_hash: string
+          is_admin?: boolean
+          is_returning?: boolean
+          last_visit?: string
+          visit_count?: number
+        }
+        Update: {
+          first_visit?: string
+          id?: string
+          ip_hash?: string
+          is_admin?: boolean
+          is_returning?: boolean
+          last_visit?: string
+          visit_count?: number
+        }
+        Relationships: []
+      }
       applications: {
         Row: {
           candidate_id: string
