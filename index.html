@@ -11,6 +11,17 @@
     <meta name="author" content="Bahia Vagas" />
     <meta name="theme-color" content="#2563eb" />
 
+    <!-- Redirect lovable.app to official domain -->
+    <script>
+      if (window.location.hostname.includes('lovable.app')) {
+        var meta = document.createElement('meta');
+        meta.name = 'robots';
+        meta.content = 'noindex, nofollow';
+        document.head.appendChild(meta);
+        window.location.replace('https://bahiavagas.com' + window.location.pathname + window.location.search);
+      }
+    </script>
+
     <!-- Favicon Configuration -->
     <link rel="icon" type="image/png" sizes="48x48" href="/favicon.png?v=3" />
     <link rel="apple-touch-icon" href="/favicon.png?v=3" />
