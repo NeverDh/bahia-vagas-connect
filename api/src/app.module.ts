@@ -17,6 +17,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { SupabaseModule } from './config/supabase.module.js';
 import { HealthController } from './health/health.controller.js';
+import { AuthModule } from './auth/auth.module.js';
 
 // Entities
 import {
@@ -84,6 +85,8 @@ import {
 
     // ── Supabase Client (para Auth apenas) ───────────────────
     SupabaseModule,
+
+    AuthModule,
   ],
   controllers: [HealthController],
   providers: [],

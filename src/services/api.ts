@@ -47,13 +47,44 @@ export class ApiRequestError extends Error {
   }
 }
 
+/** Chave do access token (JWT Supabase) no `localStorage`. */
+export const AUTH_ACCESS_TOKEN_KEY = 'bahiavagas_token';
+
+/** Chave do refresh token no `localStorage` (renovação futura no backend). */
+export const AUTH_REFRESH_TOKEN_KEY = 'bahiavagas_refresh_token';
+
 /**
- * Obtém o token JWT do localStorage (set pelo auth flow).
- * Retorna null se não estiver autenticado.
+ * Persiste tokens após login/signup com sessão.
+ */
+export function setStoredAuthTokens(
+  accessToken: string | null,
+  refreshToken?: string | null,
+): void {
+  if (accessToken) {
+    localStorage.setItem(AUTH_ACCESS_TOKEN_KEY, accessToken);
+  } else {
+    localStorage.removeItem(AUTH_ACCESS_TOKEN_KEY);
+  }
+  if (refreshToken !== undefined) {
+    if (refreshToken) {
+      localStorage.setItem(AUTH_REFRESH_TOKEN_KEY, refreshToken);
+    } else {
+      localStorage.removeItem(AUTH_REFRESH_TOKEN_KEY);
+    }
+  }
+}
+
+/** Remove access e refresh tokens. */
+export function clearStoredAuthTokens(): void {
+  localStorage.removeItem(AUTH_ACCESS_TOKEN_KEY);
+  localStorage.removeItem(AUTH_REFRESH_TOKEN_KEY);
+}
+
+/**
+ * Obtém o token JWT do localStorage (definido pelo fluxo de auth em `useAuth`).
  */
 function getAuthToken(): string | null {
-  // O token será armazenado pelo auth flow quando implementado
-  return localStorage.getItem('bahiavagas_token');
+  return localStorage.getItem(AUTH_ACCESS_TOKEN_KEY);
 }
 
 /**
@@ -73,7 +104,7 @@ function getAuthToken(): string | null {
  * const jobs = await api('/api/jobs');
  *
  * // POST com body
- * const result = await api('/api/auth/signin', {
+ * const result = await api('/api/auth/login', {
  *   method: 'POST',
  *   body: JSON.stringify({ email, password }),
  * });
