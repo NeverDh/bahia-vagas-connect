@@ -74,8 +74,9 @@
 
 | Frontend File | Método Supabase Anterior | Endpoint Backend | Tabela/Função | Status |
 |---|---|---|---|---|
-| `useAnalyticsTracker.ts` | `supabase.functions.invoke("track-visit")` | `POST /api/analytics/track` | analytics_* | ⬜ |
-| `Analytics.tsx` | `supabase.from("analytics_*").select()` | `GET /api/analytics/dashboard` | analytics_* | ⬜ |
+| `useAnalyticsTracker.ts` | ~~`supabase.functions.invoke("track-visit")`~~ | `POST /api/analytics/track` | analytics_* | ✅ |
+| `Analytics.tsx` | ~~`supabase.from("analytics_*").select()`~~ | `GET /api/admin/analytics?since=` | analytics_* | ✅ |
+| `useImportJobs.ts` | ~~Edge `import-jobs`~~ | `POST /api/admin/jobs/import` | jobs + companies | ✅ |
 
 ## SEO
 

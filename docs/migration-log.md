@@ -6,6 +6,31 @@ Registro das fases de migração do frontend para a API NestJS. Complementa refe
 
 - **`docs/supabase-frontend-migration-map.md`** — Mapeamento ponta a ponta: tabelas e arquivos no `src/`, Edge Functions, storage, RPC SQL, riscos e ordem sugerida de módulos Nest.
 
+## Módulo 7 — Analytics + import JSearch (2026-04-11)
+
+### Backend
+
+- **`AnalyticsModule`**
+  - `POST /api/analytics/track` — público; hash de IP com `ANALYTICS_IP_SALT` (default igual à Edge: `bahiavagas-salt-2026`); UA → device/browser/os; headers Cloudflare (`cf-ipcountry`, `cf-ipcity`, `cf-region`) quando presentes; upsert `analytics_visitors`, sessão (reutiliza `session_id` só se existir e for do mesmo visitante), insert `analytics_page_views`.
+- **`AdminModule`** (extensão)
+  - `GET /api/admin/analytics?since=` — JWT + admin; `since` ISO8601 opcional (default últimos 7 dias); retorno `{ visitors, sessions, page_views }` com datas em ISO (compatível com `Analytics.tsx`).
+  - `POST /api/admin/jobs/import` — JWT + admin; lógica espelhada da Edge `import-jobs` (JSearch + RapidAPI); variável **`RAPIDAPI_KEY`** só no servidor; empresa padrão `Vagas Importadas`; 429 com corpo filtrado `error: QUOTA_EXCEEDED`.
+- **`JsearchImportService`** (`api/src/jobs/jsearch-import.service.ts`); **`JobsModule`** passa a registrar `Company` + exportar o serviço de importação.
+
+### Frontend
+
+- **`src/lib/analytics-api.ts`** — `trackVisit`, `fetchAdminAnalytics`.
+- **`useAnalyticsTracker.ts`**, **`Analytics.tsx`** — sem Supabase; tracking e dashboard via API.
+- **`useImportJobs.ts`** — `POST /api/admin/jobs/import`; tratamento de `ApiRequestError` 429 / `QUOTA_EXCEEDED`.
+- Removidos **`src/integrations/supabase/client.ts`** e a dependência **`@supabase/supabase-js`** do `package.json` raiz (o app não usa mais o SDK no browser).
+
+### Variáveis de ambiente (`api/.env`)
+
+- **`RAPIDAPI_KEY`** — obrigatória para import manual de vagas.
+- **`ANALYTICS_IP_SALT`** — opcional (compatibilidade de hashes com dados já coletados se mantiver o default).
+
+**Pendente neste domínio:** sitemap (Edge ou `GET /api/seo/sitemap.xml`); `POST /api/auth/refresh` se desejado.
+
 ## Módulo 5 — Perfil candidato + candidaturas + multipart (2026-04-11)
 
 ### Backend
@@ -28,7 +53,7 @@ Registro das fases de migração do frontend para a API NestJS. Complementa refe
 - **`src/lib/admin-api.ts`** — `fetchAdminCandidates`, `fetchAdminApplications` (rotas admin do Módulo 5).
 - **`Profile.tsx`**, **`ApplicationForm.tsx`**, **`JobDetails.tsx`** — sem Supabase nestes fluxos; formulário de candidatura só precisa de `jobId` (candidato vem do JWT no servidor).
 
-**Pendente neste domínio:** — (candidaturas migradas; ver Módulos 6+ para blog/SEO/analytics/import).
+**Pendente neste domínio:** — (candidaturas migradas; blog/SEO/analytics/import nos Módulos 6–7).
 
 ## Módulo 6 — Blog + meta tags SEO (2026-04-11)
 
@@ -46,7 +71,7 @@ Registro das fases de migração do frontend para a API NestJS. Complementa refe
 - **`src/lib/blog-api.ts`**, **`src/lib/admin-blog-api.ts`**, **`src/lib/meta-tags-api.ts`**.
 - **`Blog.tsx`**, **`BlogPost.tsx`**, **`AdminBlogManager.tsx`**, **`BlogPostForm.tsx`**, **`RichTextEditor.tsx`**, **`useMetaTags.ts`**, **`AdminMetaTags.tsx`** — dados e uploads via API (imagens do editor e capa só com sessão admin + JWT).
 
-**Pendente neste domínio:** analytics, import de vagas, `track-visit`, sitemap.
+**Pendente neste domínio:** sitemap (Edge ou rota Nest futura).
 
 ## Módulo 4 — Empresa + CRUD de vagas + admin jobs/companies (2026-04-11)
 
@@ -63,9 +88,9 @@ Registro das fases de migração do frontend para a API NestJS. Complementa refe
 
 - **`src/lib/companies-dashboard-api.ts`**, **`src/lib/admin-api.ts`** — chamadas tipadas ao Nest.
 - **`CompanyDashboard.tsx`** — dados, CRUD e **validação de CNPJ** via API (`POST /api/integrations/validate-cnpj`, BrasilAPI no servidor).
-- **`Admin.tsx`** — listagem, exclusões e verificação de empresas via API (aba Importar ainda Supabase; blog/meta migrados no Módulo 6).
+- **`Admin.tsx`** — listagem, exclusões, verificação de empresas, import de vagas e abas blog/meta via API (Módulos 6 e 7).
 
-**Pendente neste domínio:** migração de import de vagas, blog e meta tags no admin.
+**Pendente neste domínio:** — (import e blog/meta migrados).
 
 ### Integrações (2026-04-11)
 

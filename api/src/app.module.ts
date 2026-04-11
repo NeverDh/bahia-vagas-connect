@@ -26,6 +26,7 @@ import { IntegrationsModule } from './integrations/integrations.module.js';
 import { ApplicationsModule } from './applications/applications.module.js';
 import { BlogModule } from './blog/blog.module.js';
 import { MetaTagsModule } from './meta-tags/meta-tags.module.js';
+import { AnalyticsModule } from './analytics/analytics.module.js';
 
 // Entities
 import {
@@ -103,6 +104,7 @@ import {
     ApplicationsModule,
     BlogModule,
     MetaTagsModule,
+    AnalyticsModule,
   ],
   controllers: [HealthController],
   providers: [],

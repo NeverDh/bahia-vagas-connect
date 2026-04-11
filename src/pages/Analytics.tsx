@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import { fetchAdminAnalytics } from "@/lib/analytics-api";
 import { MainLayout } from "@/components/MainLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -60,15 +60,10 @@ const Analytics = () => {
     try {
       const dateFilter = getDateFilter();
 
-      const [visitorsRes, sessionsRes, pageViewsRes] = await Promise.all([
-        supabase.from("analytics_visitors").select("*").gte("last_visit", dateFilter).order("last_visit", { ascending: false }),
-        supabase.from("analytics_sessions").select("*").gte("started_at", dateFilter).order("started_at", { ascending: false }),
-        supabase.from("analytics_page_views").select("*").gte("viewed_at", dateFilter).order("viewed_at", { ascending: false }),
-      ]);
-
-      if (visitorsRes.data) setVisitors(visitorsRes.data);
-      if (sessionsRes.data) setSessions(sessionsRes.data);
-      if (pageViewsRes.data) setPageViews(pageViewsRes.data);
+      const bundle = await fetchAdminAnalytics(dateFilter);
+      setVisitors(bundle.visitors);
+      setSessions(bundle.sessions);
+      setPageViews(bundle.page_views);
     } catch (error) {
       console.error("Error fetching analytics:", error);
     } finally {

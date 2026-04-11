@@ -21,7 +21,7 @@ Inventário **ponta a ponta** do uso atual do Supabase no frontend e das Edge Fu
 
 | Arquivo | Papel |
 |---------|--------|
-| `src/integrations/supabase/client.ts` | `createClient` com `VITE_SUPABASE_URL` + `VITE_SUPABASE_PUBLISHABLE_KEY`. **Meta:** remover quando nenhum módulo importar este client. |
+| ~~`src/integrations/supabase/client.ts`~~ | **Removido (Módulo 7).** O SPA não usa mais `@supabase/supabase-js`; permanece apenas `src/integrations/supabase/types.ts` como referência de tipos (opcional). |
 
 ---
 
@@ -81,12 +81,12 @@ Cada linha: onde está hoje, o quê faz, risco resumido, destino sugerido no Nes
 | `components/AdminMetaTags.tsx` | CRUD | **Alto** | `SeoModule` ou `MetaTagsModule` |
 | `hooks/useMetaTags.ts` | leitura por path (público) | Médio | `GET /api/meta-tags?path=` |
 
-### 2.7 Analytics (`analytics_*`)
+### 2.7 Analytics (`analytics_*`) — migrado (2026-04-11)
 
 | Origem | Operações | Risco | Destino Nest |
 |--------|-----------|-------|----------------|
-| `pages/Analytics.tsx` | select em visitors, sessions, page_views | **Alto** | `AnalyticsModule` admin-only; dados sensíveis agregados |
-| `hooks/useAnalyticsTracker.ts` | chama Edge `track-visit` (ver §3) | Médio | `POST /api/analytics/track` (replicar lógica da function ou proxy) |
+| `pages/Analytics.tsx` | select em visitors, sessions, page_views | **Alto** | `GET /api/admin/analytics?since=` (JWT + admin) |
+| `hooks/useAnalyticsTracker.ts` | ~~Edge `track-visit`~~ | Médio | `POST /api/analytics/track` (público) |
 
 ### 2.8 RPC / roles
 
@@ -101,8 +101,8 @@ Cada linha: onde está hoje, o quê faz, risco resumido, destino sugerido no Nes
 
 | Function | Chamada no `src/`? | JWT / secrets | Risco | Destino Nest (sugestão) |
 |----------|-------------------|---------------|-------|-------------------------|
-| `track-visit` | Sim — `useAnalyticsTracker.ts` | Não (público) | Médio | `POST /api/analytics/track` — portar lógica de `track-visit/index.ts` (hash IP, UA, CF headers) |
-| `import-jobs` | Sim — `useImportJobs.ts` | Invocação com anon; function usa `SERVICE_ROLE` | **Alto** | `POST /api/jobs/import` protegido (admin/cron) + `RAPIDAPI_KEY` só no servidor |
+| `track-visit` | ~~Sim~~ — migrado para Nest | Não (público) | Médio | **`POST /api/analytics/track`** (implementado) |
+| `import-jobs` | ~~Sim~~ — migrado para Nest | JWT admin + `RAPIDAPI_KEY` no servidor | **Alto** | **`POST /api/admin/jobs/import`** (implementado) |
 | `validate-cnpj` | Sim — `CompanyDashboard.tsx` | Anon | Médio | `POST /api/integrations/validate-cnpj` |
 | `sitemap` | Não diretamente no `src/` | Público | Baixo | `GET /api/seo/sitemap.xml` ou manter Edge até DNS/robots migrarem; `public/robots.txt` aponta para `sitemap.xml` no domínio principal |
 | `auth-email-hook` | Não (invocada pelo Supabase Auth) | Hook configurado no projeto | Baixo | Manter no Supabase ou substituir por provedor de email no Nest mais adiante |

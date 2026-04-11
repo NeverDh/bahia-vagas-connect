@@ -6,6 +6,7 @@ import {
   Param,
   ParseUUIDPipe,
   Patch,
+  Post,
   Query,
   UseGuards,
 } from '@nestjs/common';
@@ -18,6 +19,9 @@ import {
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
 import { AdminGuard } from '../auth/guards/admin.guard.js';
 import { JobsService } from '../jobs/jobs.service.js';
+import { JsearchImportService } from '../jobs/jsearch-import.service.js';
+import { AnalyticsService } from '../analytics/analytics.service.js';
+import { AdminAnalyticsQueryDto } from '../analytics/dto/admin-analytics-query.dto.js';
 import { AdminService } from './admin.service.js';
 import { CompanyVerificationDto } from './dto/company-verification.dto.js';
 
@@ -29,6 +33,8 @@ export class AdminController {
   constructor(
     private readonly adminService: AdminService,
     private readonly jobsService: JobsService,
+    private readonly jsearchImport: JsearchImportService,
+    private readonly analyticsService: AnalyticsService,
   ) {}
 
   @Get('dashboard')
@@ -72,6 +78,27 @@ export class AdminController {
       Math.max(1, parseInt(limitStr ?? '20', 10) || 20),
     );
     return this.adminService.listApplicationsPaginated(page, limit);
+  }
+
+  @Get('analytics')
+  @ApiOperation({
+    summary: 'Dados agregados analytics_* (visitantes, sessões, page views)',
+  })
+  @ApiResponse({ status: 200 })
+  getAnalytics(@Query() q: AdminAnalyticsQueryDto) {
+    const since = q.since
+      ? new Date(q.since)
+      : new Date(Date.now() - 7 * 86400000);
+    return this.analyticsService.listForAdmin(since);
+  }
+
+  @Post('jobs/import')
+  @ApiOperation({
+    summary: 'Importar vagas via JSearch (RapidAPI; RAPIDAPI_KEY no servidor)',
+  })
+  @ApiResponse({ status: 200 })
+  importJobsJsearch() {
+    return this.jsearchImport.importFromJSearch();
   }
 
   @Delete('jobs/:id')

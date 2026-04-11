@@ -158,7 +158,7 @@ O **BahiaVagas** é uma plataforma SPA (Single Page Application) que conecta can
 
 | Tecnologia | Versão | Descrição |
 |---|---|---|
-| `@supabase/supabase-js` | ^2.80.0 | SDK do Supabase |
+| `@supabase/supabase-js` | ^2.x (`api/`) | SDK do Supabase só no servidor (Auth/Storage); SPA sem dependência direta |
 | **PostgreSQL** | — | Banco de dados relacional |
 | **Deno** | — | Runtime para Edge Functions |
 | **Row Level Security (RLS)** | — | Segurança a nível de linha |

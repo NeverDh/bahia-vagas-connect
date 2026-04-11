@@ -8,6 +8,7 @@ import { Application } from '../entities/application.entity.js';
 import { CandidateProfile } from '../entities/candidate-profile.entity.js';
 import { AdminController } from './admin.controller.js';
 import { AdminService } from './admin.service.js';
+import { AnalyticsModule } from '../analytics/analytics.module.js';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { AdminService } from './admin.service.js';
     ]),
     AuthModule,
     JobsModule,
+    AnalyticsModule,
   ],
   controllers: [AdminController],
   providers: [AdminService],
