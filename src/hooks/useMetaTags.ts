@@ -1,17 +1,13 @@
 import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import { fetchMetaTagsForPath } from "@/lib/meta-tags-api";
 
 export const useMetaTags = () => {
   const location = useLocation();
 
   useEffect(() => {
     const applyMetaTags = async () => {
-      const { data } = await supabase
-        .from("meta_tags")
-        .select("*")
-        .eq("page_path", location.pathname)
-        .maybeSingle();
+      const data = await fetchMetaTagsForPath(location.pathname);
 
       if (!data) return;
 

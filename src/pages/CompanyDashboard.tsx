@@ -1,6 +1,17 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import { ApiRequestError } from "@/services/api";
+import { validateCnpj } from "@/lib/integrations-api";
+import {
+  fetchMyCompany,
+  fetchMyJobs,
+  updateMyCompany,
+  fetchMyJob,
+  createMyJob,
+  updateMyJob,
+  deleteMyJob,
+  patchMyJobStatus,
+} from "@/lib/companies-dashboard-api";
 import { MainLayout } from "@/components/MainLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -139,55 +150,44 @@ const CompanyDashboard = () => {
   const fetchCompanyData = async () => {
     if (!user) return;
 
-    const { data, error } = await supabase
-      .from("companies")
-      .select("*")
-      .eq("user_id", user.id)
-      .single();
-
-    if (error) {
+    try {
+      const data = await fetchMyCompany();
+      setCompany(data as Company);
+      setProfileForm({
+        name: data.name || "",
+        description: data.description || "",
+        location: data.location || "",
+        website: data.website || "",
+        phone: data.phone || "",
+        cnpj: data.cnpj ? formatCNPJ(data.cnpj) : "",
+        is_freelancer: data.is_freelancer || false,
+      });
+    } catch (error) {
       console.error("Error fetching company:", error);
-      toast.error("Erro ao carregar dados da empresa");
-      return;
+      const msg =
+        error instanceof ApiRequestError ? error.message : undefined;
+      toast.error("Erro ao carregar dados da empresa", {
+        description: msg,
+      });
     }
-
-    setCompany(data);
-    
-    // Initialize profile form with company data
-    setProfileForm({
-      name: data.name || "",
-      description: data.description || "",
-      location: data.location || "",
-      website: data.website || "",
-      phone: data.phone || "",
-      cnpj: data.cnpj || "",
-      is_freelancer: data.is_freelancer || false,
-    });
   };
 
   const fetchJobs = async () => {
     if (!company) return;
 
     setLoading(true);
-    const from = (currentPage - 1) * itemsPerPage;
-    const to = from + itemsPerPage - 1;
-
-    const { data, error, count } = await supabase
-      .from("jobs")
-      .select("*", { count: "exact" })
-      .eq("company_id", company.id)
-      .order("created_at", { ascending: false })
-      .range(from, to);
-
-    if (error) {
+    try {
+      const res = await fetchMyJobs(currentPage, itemsPerPage);
+      setJobs((res.data || []) as Job[]);
+      setTotalJobs(res.total);
+    } catch (error) {
       console.error("Error fetching jobs:", error);
-      toast.error("Erro ao carregar vagas");
-      return;
+      const msg =
+        error instanceof ApiRequestError ? error.message : undefined;
+      toast.error("Erro ao carregar vagas", { description: msg });
+    } finally {
+      setLoading(false);
     }
-
-    setJobs(data || []);
-    setTotalJobs(count || 0);
-    setLoading(false);
   };
 
   const resetForm = () => {
@@ -234,16 +234,7 @@ const CompanyDashboard = () => {
     setCnpjLoading(true);
     
     try {
-      const response = await supabase.functions.invoke("validate-cnpj", {
-        body: { cnpj: cleanCNPJ },
-      });
-
-      if (response.error) {
-        toast.error("Erro ao validar CNPJ");
-        return;
-      }
-
-      const data = response.data;
+      const data = await validateCnpj(cleanCNPJ);
 
       if (!data.valid) {
         toast.error(data.error || "CNPJ inválido");
@@ -297,23 +288,21 @@ const CompanyDashboard = () => {
       return;
     }
 
-    const { error } = await supabase
-      .from("companies")
-      .update({
-        name: profileForm.name,
+    try {
+      await updateMyCompany({
+        name: profileForm.name.trim(),
         description: profileForm.description || null,
         location: profileForm.location || null,
         website: profileForm.website || null,
         phone: profileForm.phone || null,
-        cnpj: profileForm.is_freelancer ? null : profileForm.cnpj.replace(/\D/g, ""),
+        cnpj: profileForm.is_freelancer ? null : profileForm.cnpj,
         is_freelancer: profileForm.is_freelancer,
-        is_verified: true,
-      })
-      .eq("id", company.id);
-
-    if (error) {
+      });
+    } catch (error) {
       console.error("Error updating company:", error);
-      toast.error("Erro ao salvar perfil");
+      const msg =
+        error instanceof ApiRequestError ? error.message : undefined;
+      toast.error("Erro ao salvar perfil", { description: msg });
       return;
     }
 
@@ -356,25 +345,25 @@ const CompanyDashboard = () => {
       return;
     }
 
-    const { error } = await supabase.from("jobs").insert({
-      company_id: company.id,
-      title: formData.title,
-      description: formData.description,
-      requirements: formData.requirements || null,
-      benefits: formData.benefits || null,
-      location: formData.location,
-      category: formData.category,
-      contract_type: formData.contract_type,
-      experience_level: formData.experience_level,
-      salary_min: formData.salary_min ? parseFloat(formData.salary_min) : null,
-      salary_max: formData.salary_max ? parseFloat(formData.salary_max) : null,
-      remote_option: formData.remote_option,
-      status: "active",
-    });
-
-    if (error) {
+    try {
+      await createMyJob({
+        title: formData.title,
+        description: formData.description,
+        requirements: formData.requirements || null,
+        benefits: formData.benefits || null,
+        location: formData.location,
+        category: formData.category,
+        contract_type: formData.contract_type,
+        experience_level: formData.experience_level,
+        salary_min: formData.salary_min ? parseFloat(formData.salary_min) : null,
+        salary_max: formData.salary_max ? parseFloat(formData.salary_max) : null,
+        remote_option: formData.remote_option,
+      });
+    } catch (error) {
       console.error("Error creating job:", error);
-      toast.error("Erro ao criar vaga");
+      const msg =
+        error instanceof ApiRequestError ? error.message : undefined;
+      toast.error("Erro ao criar vaga", { description: msg });
       return;
     }
 
@@ -387,9 +376,8 @@ const CompanyDashboard = () => {
   const handleEditJob = async () => {
     if (!editingJob) return;
 
-    const { error } = await supabase
-      .from("jobs")
-      .update({
+    try {
+      await updateMyJob(editingJob.id, {
         title: formData.title,
         description: formData.description,
         requirements: formData.requirements || null,
@@ -401,12 +389,12 @@ const CompanyDashboard = () => {
         salary_min: formData.salary_min ? parseFloat(formData.salary_min) : null,
         salary_max: formData.salary_max ? parseFloat(formData.salary_max) : null,
         remote_option: formData.remote_option,
-      })
-      .eq("id", editingJob.id);
-
-    if (error) {
+      });
+    } catch (error) {
       console.error("Error updating job:", error);
-      toast.error("Erro ao atualizar vaga");
+      const msg =
+        error instanceof ApiRequestError ? error.message : undefined;
+      toast.error("Erro ao atualizar vaga", { description: msg });
       return;
     }
 
@@ -420,11 +408,13 @@ const CompanyDashboard = () => {
   const handleDeleteJob = async (jobId: string) => {
     if (!confirm("Tem certeza que deseja excluir esta vaga?")) return;
 
-    const { error } = await supabase.from("jobs").delete().eq("id", jobId);
-
-    if (error) {
+    try {
+      await deleteMyJob(jobId);
+    } catch (error) {
       console.error("Error deleting job:", error);
-      toast.error("Erro ao excluir vaga");
+      const msg =
+        error instanceof ApiRequestError ? error.message : undefined;
+      toast.error("Erro ao excluir vaga", { description: msg });
       return;
     }
 
@@ -435,14 +425,13 @@ const CompanyDashboard = () => {
   const handleToggleStatus = async (job: Job) => {
     const newStatus = job.status === "active" ? "closed" : "active";
 
-    const { error } = await supabase
-      .from("jobs")
-      .update({ status: newStatus })
-      .eq("id", job.id);
-
-    if (error) {
+    try {
+      await patchMyJobStatus(job.id, newStatus);
+    } catch (error) {
       console.error("Error updating status:", error);
-      toast.error("Erro ao atualizar status");
+      const msg =
+        error instanceof ApiRequestError ? error.message : undefined;
+      toast.error("Erro ao atualizar status", { description: msg });
       return;
     }
 
@@ -451,13 +440,8 @@ const CompanyDashboard = () => {
   };
 
   const openEditDialog = async (job: Job) => {
-    const { data } = await supabase
-      .from("jobs")
-      .select("*")
-      .eq("id", job.id)
-      .single();
-
-    if (data) {
+    try {
+      const data = await fetchMyJob(job.id);
       setFormData({
         title: data.title,
         description: data.description,
@@ -465,14 +449,21 @@ const CompanyDashboard = () => {
         benefits: data.benefits || "",
         location: data.location,
         category: data.category,
-        contract_type: data.contract_type,
-        experience_level: data.experience_level,
-        salary_min: data.salary_min?.toString() || "",
-        salary_max: data.salary_max?.toString() || "",
-        remote_option: data.remote_option,
+        contract_type: data.contract_type as typeof formData.contract_type,
+        experience_level: data.experience_level as typeof formData.experience_level,
+        salary_min:
+          data.salary_min != null ? String(data.salary_min) : "",
+        salary_max:
+          data.salary_max != null ? String(data.salary_max) : "",
+        remote_option: !!data.remote_option,
       });
       setEditingJob(job);
       setIsEditDialogOpen(true);
+    } catch (error) {
+      console.error("Error loading job:", error);
+      const msg =
+        error instanceof ApiRequestError ? error.message : undefined;
+      toast.error("Erro ao carregar vaga", { description: msg });
     }
   };
 

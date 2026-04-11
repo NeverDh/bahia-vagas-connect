@@ -4,16 +4,16 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
 import { Loader2, Upload, FileText } from "lucide-react";
+import { ApiRequestError } from "@/services/api";
+import { submitApplication } from "@/lib/candidates-api";
 
 interface ApplicationFormProps {
   jobId: string;
-  candidateId: string;
   onSuccess?: () => void;
 }
 
-export const ApplicationForm = ({ jobId, candidateId, onSuccess }: ApplicationFormProps) => {
+export const ApplicationForm = ({ jobId, onSuccess }: ApplicationFormProps) => {
   const [coverLetter, setCoverLetter] = useState("");
   const [resumeFile, setResumeFile] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -22,8 +22,11 @@ export const ApplicationForm = ({ jobId, candidateId, onSuccess }: ApplicationFo
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // Validate file type
-      const validTypes = ["application/pdf", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"];
+      const validTypes = [
+        "application/pdf",
+        "application/msword",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      ];
       if (!validTypes.includes(file.type)) {
         toast({
           title: "Tipo de arquivo inválido",
@@ -33,7 +36,6 @@ export const ApplicationForm = ({ jobId, candidateId, onSuccess }: ApplicationFo
         return;
       }
 
-      // Validate file size (max 5MB)
       if (file.size > 5 * 1024 * 1024) {
         toast({
           title: "Arquivo muito grande",
@@ -49,7 +51,7 @@ export const ApplicationForm = ({ jobId, candidateId, onSuccess }: ApplicationFo
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!resumeFile) {
       toast({
         title: "Currículo obrigatório",
@@ -62,58 +64,21 @@ export const ApplicationForm = ({ jobId, candidateId, onSuccess }: ApplicationFo
     setIsSubmitting(true);
 
     try {
-      // Get current user
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("Usuário não autenticado");
-
-      // Upload resume to storage
-      const fileExt = resumeFile.name.split(".").pop();
-      const fileName = `${user.id}/${Date.now()}.${fileExt}`;
-      
-      const { error: uploadError, data: uploadData } = await supabase.storage
-        .from("resumes")
-        .upload(fileName, resumeFile);
-
-      if (uploadError) throw uploadError;
-
-      // Get public URL for the resume
-      const { data: { publicUrl } } = supabase.storage
-        .from("resumes")
-        .getPublicUrl(fileName);
-
-      // Update candidate profile with resume URL
-      const { error: profileError } = await supabase
-        .from("candidate_profiles")
-        .update({ resume_url: publicUrl })
-        .eq("id", candidateId);
-
-      if (profileError) throw profileError;
-
-      // Create application
-      const { error: applicationError } = await supabase
-        .from("applications")
-        .insert({
-          job_id: jobId,
-          candidate_id: candidateId,
-          cover_letter: coverLetter || null,
-          status: "pending",
-        });
-
-      if (applicationError) throw applicationError;
-
+      await submitApplication(jobId, resumeFile, coverLetter);
       toast({
         title: "Candidatura enviada!",
         description: "Sua candidatura foi registrada com sucesso.",
       });
-
-      if (onSuccess) {
-        onSuccess();
-      }
-    } catch (error: any) {
+      onSuccess?.();
+    } catch (error) {
       console.error("Error submitting application:", error);
+      const description =
+        error instanceof ApiRequestError
+          ? error.message
+          : "Tente novamente mais tarde";
       toast({
         title: "Erro ao enviar candidatura",
-        description: error.message || "Tente novamente mais tarde",
+        description,
         variant: "destructive",
       });
     } finally {
@@ -142,13 +107,9 @@ export const ApplicationForm = ({ jobId, candidateId, onSuccess }: ApplicationFo
             <Upload className="h-4 w-4" />
             {resumeFile ? resumeFile.name : "Selecionar arquivo"}
           </Label>
-          {resumeFile && (
-            <FileText className="h-5 w-5 text-primary" />
-          )}
+          {resumeFile && <FileText className="h-5 w-5 text-primary" />}
         </div>
-        <p className="text-sm text-muted-foreground">
-          PDF ou DOC, máximo 5MB
-        </p>
+        <p className="text-sm text-muted-foreground">PDF ou DOC, máximo 5MB</p>
       </div>
 
       <div className="space-y-2">

@@ -38,13 +38,17 @@ export enum ContractType {
   FREELANCE = 'freelance',
 }
 
-/** Níveis de experiência */
+/** Níveis de experiência (alinhar ao enum PostgreSQL `experience_level`) */
 export enum ExperienceLevel {
   INTERN = 'intern',
   JUNIOR = 'junior',
   MID = 'mid',
   SENIOR = 'senior',
   SPECIALIST = 'specialist',
+  AUXILIAR = 'auxiliar',
+  ASSISTENTE = 'assistente',
+  FREELANCER = 'freelancer',
+  JOVEM_APRENDIZ = 'jovem_aprendiz',
 }
 
 @Entity('jobs')

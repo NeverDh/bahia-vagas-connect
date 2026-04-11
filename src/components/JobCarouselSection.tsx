@@ -1,7 +1,8 @@
 import { useEffect, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { MapPin, Building2, ArrowRight } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import api from "@/services/api";
+import type { JobCarouselPayload } from "@/lib/jobs-api";
 import useEmblaCarousel from "embla-carousel-react";
 import Autoplay from "embla-carousel-autoplay";
 
@@ -76,47 +77,15 @@ export function useJobCarouselData() {
   const [popularJobs, setPopularJobs] = useState<JobCard[]>([]);
 
   const fetchJobs = useCallback(async () => {
-    const { data: recent } = await supabase
-      .from("jobs")
-      .select("id, title, location, company_id, companies(name)")
-      .eq("status", "active")
-      .order("created_at", { ascending: false })
-      .limit(12);
-
-    if (recent) {
-      setRecentJobs(
-        recent.map((j: any) => ({
-          id: j.id,
-          title: j.title,
-          location: j.location,
-          company_name: j.companies?.name ?? null,
-        }))
+    try {
+      const payload = await api.get<JobCarouselPayload>(
+        "/api/jobs/featured/carousel",
       );
-    }
-
-    const { data: popular } = await supabase
-      .from("jobs")
-      .select("id, title, location, company_id, companies(name), applications(count)")
-      .eq("status", "active")
-      .limit(12);
-
-    if (popular) {
-      const sorted = [...popular]
-        .sort((a: any, b: any) => {
-          const countA = a.applications?.[0]?.count ?? 0;
-          const countB = b.applications?.[0]?.count ?? 0;
-          return countB - countA;
-        })
-        .slice(0, 12);
-
-      setPopularJobs(
-        sorted.map((j: any) => ({
-          id: j.id,
-          title: j.title,
-          location: j.location,
-          company_name: j.companies?.name ?? null,
-        }))
-      );
+      setRecentJobs(payload.recent);
+      setPopularJobs(payload.popular);
+    } catch {
+      setRecentJobs([]);
+      setPopularJobs([]);
     }
   }, []);
 

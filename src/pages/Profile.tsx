@@ -1,7 +1,12 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { ApiRequestError } from "@/services/api";
+import {
+  fetchCandidateProfile,
+  patchCandidateProfile,
+  fetchCandidateApplications,
+} from "@/lib/candidates-api";
 import { MainLayout } from "@/components/MainLayout";
 import { Pagination } from "@/components/Pagination";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -91,101 +96,54 @@ const Profile = () => {
   const fetchProfile = async () => {
     if (!user) return;
 
-    const { data, error } = await supabase
-      .from("candidate_profiles")
-      .select("*")
-      .eq("user_id", user.id)
-      .single();
-
-    if (error) {
+    try {
+      const data = await fetchCandidateProfile();
+      if (data) {
+        setProfile(data);
+        setEditedProfile(data);
+      }
+    } catch (error) {
       toast.error("Erro ao carregar perfil");
       console.error(error);
-    } else if (data) {
-      setProfile(data);
-      setEditedProfile(data);
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   };
 
   const fetchApplications = async () => {
     if (!user) return;
 
-    const { data: profileData } = await supabase
-      .from("candidate_profiles")
-      .select("id")
-      .eq("user_id", user.id)
-      .single();
-
-    if (!profileData) return;
-
-    // Get total count
-    const { count, error: countError } = await supabase
-      .from("applications")
-      .select("*", { count: "exact", head: true })
-      .eq("candidate_id", profileData.id);
-
-    if (countError) {
-      toast.error("Erro ao carregar candidaturas");
-      console.error(countError);
-      return;
-    }
-
-    setTotalApplications(count || 0);
-
-    // Get paginated data
-    const from = (currentPage - 1) * itemsPerPage;
-    const to = from + itemsPerPage - 1;
-
-    const { data, error } = await supabase
-      .from("applications")
-      .select(`
-        id,
-        status,
-        created_at,
-        cover_letter,
-        jobs (
-          id,
-          title,
-          location,
-          companies (
-            name,
-            logo_url
-          )
-        )
-      `)
-      .eq("candidate_id", profileData.id)
-      .order("created_at", { ascending: false })
-      .range(from, to);
-
-    if (error) {
-      toast.error("Erro ao carregar candidaturas");
+    try {
+      const res = await fetchCandidateApplications(currentPage, itemsPerPage);
+      setTotalApplications(res.total);
+      setApplications((res.data || []) as Application[]);
+    } catch (error) {
+      const msg =
+        error instanceof ApiRequestError ? error.message : undefined;
+      toast.error("Erro ao carregar candidaturas", { description: msg });
       console.error(error);
-    } else {
-      setApplications(data as Application[]);
     }
   };
 
   const handleSave = async () => {
     if (!user || !profile) return;
 
-    const { error } = await supabase
-      .from("candidate_profiles")
-      .update({
+    try {
+      const updated = await patchCandidateProfile({
         full_name: editedProfile.full_name || profile.full_name,
-        phone: editedProfile.phone,
-        bio: editedProfile.bio,
-        linkedin_url: editedProfile.linkedin_url,
-      })
-      .eq("user_id", user.id);
-
-    if (error) {
-      toast.error("Erro ao atualizar perfil");
-      console.error(error);
-    } else {
+        phone: editedProfile.phone?.trim() || null,
+        bio: editedProfile.bio ?? null,
+        linkedin_url: editedProfile.linkedin_url?.trim() || null,
+      });
       toast.success("Perfil atualizado com sucesso!");
-      setProfile({ ...profile, ...editedProfile });
+      setProfile(updated as CandidateProfile);
+      setEditedProfile(updated as CandidateProfile);
       setIsEditing(false);
+    } catch (error) {
+      const msg =
+        error instanceof ApiRequestError ? error.message : undefined;
+      toast.error("Erro ao atualizar perfil", { description: msg });
+      console.error(error);
     }
   };
 

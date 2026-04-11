@@ -16,7 +16,7 @@ import { Color } from '@tiptap/extension-color';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { supabase } from '@/integrations/supabase/client';
+import { uploadAdminBlogImage } from '@/lib/admin-blog-api';
 import { toast } from 'sonner';
 import { useRef, useState, useCallback } from 'react';
 import { optimizeImage } from '@/lib/image-optimizer';
@@ -91,13 +91,8 @@ export const RichTextEditor = ({ content, onChange }: RichTextEditorProps) => {
     try {
       toast.info('Otimizando imagem (max 800px, WEBP)...');
       const { file: optimized, altText } = await optimizeImage(file, 'content');
-      const fileName = optimized.name;
-      const { error } = await supabase.storage.from('blog-images').upload(fileName, optimized, {
-        contentType: 'image/webp',
-      });
-      if (error) throw error;
-      const { data: urlData } = supabase.storage.from('blog-images').getPublicUrl(fileName);
-      editor?.chain().focus().setImage({ src: urlData.publicUrl, alt: altText }).run();
+      const publicUrl = await uploadAdminBlogImage(optimized);
+      editor?.chain().focus().setImage({ src: publicUrl, alt: altText }).run();
       const sizeKB = Math.round(optimized.size / 1024);
       toast.success(`Imagem otimizada (${sizeKB} KB)`);
     } catch (err) {

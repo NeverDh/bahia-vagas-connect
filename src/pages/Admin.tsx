@@ -1,6 +1,12 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import { ApiRequestError } from "@/services/api";
+import {
+  fetchAdminDashboard,
+  adminDeleteJob,
+  adminDeleteCompany,
+  adminSetCompanyVerification,
+} from "@/lib/admin-api";
 import { MainLayout } from "@/components/MainLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -66,25 +72,15 @@ const Admin = () => {
   const fetchData = async () => {
     setLoadingData(true);
     try {
-      const [jobsRes, companiesRes, applicationsRes, candidatesRes] = await Promise.all([
-        supabase.from("jobs").select("*, companies(name)").order("created_at", { ascending: false }).limit(50),
-        supabase.from("companies").select("*").order("created_at", { ascending: false }).limit(50),
-        supabase.from("applications").select("id", { count: "exact", head: true }),
-        supabase.from("candidate_profiles").select("id", { count: "exact", head: true }),
-      ]);
-
-      if (jobsRes.data) setJobs(jobsRes.data);
-      if (companiesRes.data) setCompanies(companiesRes.data);
-      
-      setStats({
-        jobs: jobsRes.data?.length || 0,
-        companies: companiesRes.data?.length || 0,
-        applications: applicationsRes.count || 0,
-        candidates: candidatesRes.count || 0,
-      });
+      const res = await fetchAdminDashboard();
+      setJobs(res.jobs);
+      setCompanies(res.companies);
+      setStats(res.stats);
     } catch (error) {
       console.error("Error fetching admin data:", error);
-      toast.error("Erro ao carregar dados");
+      const msg =
+        error instanceof ApiRequestError ? error.message : undefined;
+      toast.error("Erro ao carregar dados", { description: msg });
     } finally {
       setLoadingData(false);
     }
@@ -96,32 +92,42 @@ const Admin = () => {
   };
 
   const handleDeleteJob = async (jobId: string) => {
-    const { error } = await supabase.from("jobs").delete().eq("id", jobId);
-    if (error) {
-      toast.error("Erro ao deletar vaga");
-    } else {
+    try {
+      await adminDeleteJob(jobId);
       toast.success("Vaga deletada");
-      setJobs(jobs.filter(j => j.id !== jobId));
+      setJobs(jobs.filter((j) => j.id !== jobId));
+    } catch (error) {
+      const msg =
+        error instanceof ApiRequestError ? error.message : undefined;
+      toast.error("Erro ao deletar vaga", { description: msg });
     }
   };
 
   const handleDeleteCompany = async (companyId: string) => {
-    const { error } = await supabase.from("companies").delete().eq("id", companyId);
-    if (error) {
-      toast.error("Erro ao deletar empresa", { description: error.message });
-    } else {
+    try {
+      await adminDeleteCompany(companyId);
       toast.success("Empresa deletada");
-      setCompanies(companies.filter(c => c.id !== companyId));
+      setCompanies(companies.filter((c) => c.id !== companyId));
+    } catch (error) {
+      const msg =
+        error instanceof ApiRequestError ? error.message : undefined;
+      toast.error("Erro ao deletar empresa", { description: msg });
     }
   };
 
   const handleVerifyCompany = async (companyId: string, verified: boolean) => {
-    const { error } = await supabase.from("companies").update({ is_verified: verified }).eq("id", companyId);
-    if (error) {
-      toast.error("Erro ao atualizar empresa");
-    } else {
+    try {
+      await adminSetCompanyVerification(companyId, verified);
       toast.success(verified ? "Empresa verificada" : "Verificação removida");
-      setCompanies(companies.map(c => c.id === companyId ? { ...c, is_verified: verified } : c));
+      setCompanies(
+        companies.map((c) =>
+          c.id === companyId ? { ...c, is_verified: verified } : c,
+        ),
+      );
+    } catch (error) {
+      const msg =
+        error instanceof ApiRequestError ? error.message : undefined;
+      toast.error("Erro ao atualizar empresa", { description: msg });
     }
   };
 

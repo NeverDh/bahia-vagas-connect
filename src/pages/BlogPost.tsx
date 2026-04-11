@@ -1,6 +1,10 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
+import { ApiRequestError } from '@/services/api';
+import {
+  fetchBlogPostBySlug,
+  recordBlogPostView,
+} from '@/lib/blog-api';
 import { MainLayout } from '@/components/MainLayout';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -43,30 +47,37 @@ const BlogPost = () => {
 
   const fetchPost = async (slug: string) => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from('blog_posts')
-      .select('*')
-      .eq('slug', slug)
-      .eq('status', 'published')
-      .single();
-
-    if (data) {
-      setPost(data);
-      supabase.from('blog_posts').update({ views: (data.views || 0) + 1 }).eq('id', data.id).then();
+    setNotFound(false);
+    try {
+      const data = await fetchBlogPostBySlug(slug);
+      setPost(data as Post);
+      void recordBlogPostView(slug).catch(() => {});
       document.title = data.meta_title || data.title;
       setMetaTag('description', data.meta_description || data.excerpt || '');
       setMetaTag('og:title', data.og_title || data.title);
       setMetaTag('og:description', data.og_description || data.excerpt || '');
-      if (data.og_image || data.featured_image) setMetaTag('og:image', data.og_image || data.featured_image || '');
+      if (data.og_image || data.featured_image) {
+        setMetaTag('og:image', data.og_image || data.featured_image || '');
+      }
       if (data.canonical_url) {
         let link = document.querySelector('link[rel="canonical"]') as HTMLLinkElement;
-        if (!link) { link = document.createElement('link'); link.rel = 'canonical'; document.head.appendChild(link); }
+        if (!link) {
+          link = document.createElement('link');
+          link.rel = 'canonical';
+          document.head.appendChild(link);
+        }
         link.href = data.canonical_url;
       }
-    } else {
-      setNotFound(true);
+    } catch (e) {
+      if (e instanceof ApiRequestError && e.statusCode === 404) {
+        setNotFound(true);
+      } else {
+        toast.error("Erro ao carregar artigo");
+        setNotFound(true);
+      }
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const setMetaTag = (name: string, content: string) => {

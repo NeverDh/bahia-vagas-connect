@@ -6,6 +6,88 @@ Registro das fases de migração do frontend para a API NestJS. Complementa refe
 
 - **`docs/supabase-frontend-migration-map.md`** — Mapeamento ponta a ponta: tabelas e arquivos no `src/`, Edge Functions, storage, RPC SQL, riscos e ordem sugerida de módulos Nest.
 
+## Módulo 5 — Perfil candidato + candidaturas + multipart (2026-04-11)
+
+### Backend
+
+- **`CandidatesModule`** (extensão)
+  - `GET /api/candidates/me` — resposta com datas em ISO (igual contrato anterior).
+  - `PATCH /api/candidates/me` — `full_name`, `phone`, `bio`, `linkedin_url` (apenas papel `candidate`).
+  - `GET /api/candidates/me/applications?page=&limit=` — lista com `jobs` + `companies` no formato esperado pelo `Profile.tsx`.
+- **`ApplicationsModule`**
+  - `POST /api/applications` — `multipart/form-data`: `job_id`, `resume` (arquivo), `cover_letter` opcional; JWT; upload no bucket Supabase `resumes` via **service role**; atualiza `candidate_profiles.resume_url`; insere `applications` (vaga `active`, sem duplicata).
+- **`AdminModule`** (extensão Módulo 5)
+  - `GET /api/admin/candidates?page=&limit=` — lista paginada de `candidate_profiles` (admin).
+  - `GET /api/admin/applications?page=&limit=` — candidaturas com vaga, empresa e nome do candidato (admin).
+- Dependência **`@types/multer`** no `api/` para tipagem de upload.
+
+### Frontend
+
+- **`src/services/api.ts`** — corpo `FormData` não força `Content-Type: application/json`; **`api.postFormData`**.
+- **`src/lib/candidates-api.ts`** — perfil, candidaturas paginadas, `submitApplication`.
+- **`src/lib/admin-api.ts`** — `fetchAdminCandidates`, `fetchAdminApplications` (rotas admin do Módulo 5).
+- **`Profile.tsx`**, **`ApplicationForm.tsx`**, **`JobDetails.tsx`** — sem Supabase nestes fluxos; formulário de candidatura só precisa de `jobId` (candidato vem do JWT no servidor).
+
+**Pendente neste domínio:** — (candidaturas migradas; ver Módulos 6+ para blog/SEO/analytics/import).
+
+## Módulo 6 — Blog + meta tags SEO (2026-04-11)
+
+### Backend
+
+- **`BlogModule`**
+  - Público: `GET /api/blog`, `GET /api/blog/:slug`, `POST /api/blog/:slug/view` (incremento de `views`).
+  - Admin (`JwtAuthGuard` + `AdminGuard`): `GET/PATCH/DELETE /api/admin/blog/posts`, `GET /api/admin/blog/posts/:id`, `POST /api/admin/blog/posts`, `POST /api/admin/blog/upload-image` (multipart `file` → bucket **`blog-images`** via service role).
+- **`MetaTagsModule`**
+  - Público: `GET /api/meta-tags?path=` — retorna objeto ou `null`.
+  - Admin: `GET/POST/PATCH/DELETE /api/admin/meta-tags` (CRUD em `meta_tags`).
+
+### Frontend
+
+- **`src/lib/blog-api.ts`**, **`src/lib/admin-blog-api.ts`**, **`src/lib/meta-tags-api.ts`**.
+- **`Blog.tsx`**, **`BlogPost.tsx`**, **`AdminBlogManager.tsx`**, **`BlogPostForm.tsx`**, **`RichTextEditor.tsx`**, **`useMetaTags.ts`**, **`AdminMetaTags.tsx`** — dados e uploads via API (imagens do editor e capa só com sessão admin + JWT).
+
+**Pendente neste domínio:** analytics, import de vagas, `track-visit`, sitemap.
+
+## Módulo 4 — Empresa + CRUD de vagas + admin jobs/companies (2026-04-11)
+
+### Backend
+
+- **`AdminGuard`** (`api/src/auth/guards/admin.guard.ts`) — após `JwtAuthGuard`, confere role `admin` em `user_roles` via `AuthService.isAdminUser`.
+- **`CompaniesModule`**
+  - `GET /api/companies/me`, `PATCH /api/companies/me` — JWT; exige papel `company` e linha em `companies.user_id`.
+  - `GET/PATCH/DELETE /api/companies/me/jobs`, `GET /api/companies/me/jobs/:jobId`, `POST /api/companies/me/jobs`, `PATCH /api/companies/me/jobs/:jobId/status` — dono da empresa (`company.user_id`) ou admin nas mutações de vaga; regras espelhadas do dashboard (perfil verificado, freelancer só PJ/freelance).
+- **`AdminModule`** — `GET /api/admin/dashboard` (listas recentes + contagens totais), `DELETE /api/admin/jobs/:id`, `DELETE /api/admin/companies/:id`, `PATCH /api/admin/companies/:id/verification`.
+- **`JobsService`** — métodos de gestão (`listByCompany`, `createCompanyJob`, `updateCompanyJobForUser`, `deleteCompanyJobForUser`, `listForAdmin`, `deleteJobByAdmin`, etc.).
+
+### Frontend
+
+- **`src/lib/companies-dashboard-api.ts`**, **`src/lib/admin-api.ts`** — chamadas tipadas ao Nest.
+- **`CompanyDashboard.tsx`** — dados, CRUD e **validação de CNPJ** via API (`POST /api/integrations/validate-cnpj`, BrasilAPI no servidor).
+- **`Admin.tsx`** — listagem, exclusões e verificação de empresas via API (aba Importar ainda Supabase; blog/meta migrados no Módulo 6).
+
+**Pendente neste domínio:** migração de import de vagas, blog e meta tags no admin.
+
+### Integrações (2026-04-11)
+
+- **`IntegrationsModule`**: `POST /api/integrations/validate-cnpj` (JWT) — espelha a Edge `validate-cnpj` (dígitos verificadores + `https://brasilapi.com.br/api/cnpj/v1/{cnpj}`).
+- **`src/lib/integrations-api.ts`** — cliente tipado; **`CompanyDashboard.tsx`** sem `supabase` neste fluxo.
+
+## Módulo 3 — Vagas públicas + candidaturas (leitura) (2026-04-11)
+
+### Backend
+
+- **`JobsModule`**: `GET /api/jobs` (query: `search` → SQL `search_jobs`, filtros espelhando `Jobs.tsx`), `GET /api/jobs/:id`, `GET /api/jobs/featured/carousel`, `GET /api/jobs/recent/city`, `GET /api/jobs/candidate/applied-ids` (JWT).
+- **`CandidatesModule`**: `GET /api/candidates/me` (JWT) — perfil do candidato.
+- **`AuthModule`**: exporta `JwtStrategy` e `PassportModule` para uso do guard em outros módulos.
+- Entidade **`Job`**: enum `ExperienceLevel` alinhado ao Postgres (`auxiliar`, `assistente`, `freelancer`, `jovem_aprendiz`).
+
+### Frontend
+
+- **`src/lib/jobs-api.ts`** — helpers e tipos para listagem e `applied-ids`.
+- **`Jobs.tsx`**, **`JobDetails.tsx`**, **`JobsByCategory.tsx`**, **`ProgrammaticSeoPage.tsx`**, **`JobCarouselSection.tsx`**, **`RecentJobsByCity.tsx`** — passam a usar a API Nest.
+
+**Escrita / admin (jobs e empresas):** migrado no Módulo 4.
+
 ## Módulo 2 — Admin / `has_role` (2026-04-11)
 
 - **`AuthPayload`** passa a incluir `isAdmin` (consulta `user_roles.role = admin` via TypeORM, equivalente a `has_role` no Postgres).

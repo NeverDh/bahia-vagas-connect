@@ -9,6 +9,7 @@ import { UserRole } from '../entities/user-role.entity.js';
 import { AuthController } from './auth.controller.js';
 import { AuthService } from './auth.service.js';
 import { JwtAuthGuard } from './guards/jwt-auth.guard.js';
+import { AdminGuard } from './guards/admin.guard.js';
 import { JwtStrategy } from './strategies/jwt.strategy.js';
 
 /**
@@ -22,7 +23,7 @@ import { JwtStrategy } from './strategies/jwt.strategy.js';
     SupabaseModule,
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy, JwtAuthGuard],
-  exports: [AuthService, JwtAuthGuard],
+  providers: [AuthService, JwtStrategy, JwtAuthGuard, AdminGuard],
+  exports: [AuthService, JwtAuthGuard, AdminGuard, JwtStrategy, PassportModule],
 })
 export class AuthModule {}

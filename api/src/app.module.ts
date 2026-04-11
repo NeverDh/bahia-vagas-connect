@@ -18,6 +18,14 @@ import { ThrottlerModule } from '@nestjs/throttler';
 import { SupabaseModule } from './config/supabase.module.js';
 import { HealthController } from './health/health.controller.js';
 import { AuthModule } from './auth/auth.module.js';
+import { JobsModule } from './jobs/jobs.module.js';
+import { CandidatesModule } from './candidates/candidates.module.js';
+import { CompaniesModule } from './companies/companies.module.js';
+import { AdminModule } from './admin/admin.module.js';
+import { IntegrationsModule } from './integrations/integrations.module.js';
+import { ApplicationsModule } from './applications/applications.module.js';
+import { BlogModule } from './blog/blog.module.js';
+import { MetaTagsModule } from './meta-tags/meta-tags.module.js';
 
 // Entities
 import {
@@ -87,6 +95,14 @@ import {
     SupabaseModule,
 
     AuthModule,
+    JobsModule,
+    CandidatesModule,
+    CompaniesModule,
+    AdminModule,
+    IntegrationsModule,
+    ApplicationsModule,
+    BlogModule,
+    MetaTagsModule,
   ],
   controllers: [HealthController],
   providers: [],

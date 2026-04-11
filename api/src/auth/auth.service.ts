@@ -257,6 +257,14 @@ export class AuthService {
     return { userRole, isAdmin };
   }
 
+  /** Usado por guards e serviços que precisam checar admin sem resolver papel funcional completo. */
+  async isAdminUser(userId: string): Promise<boolean> {
+    const row = await this.userRoleRepo.findOne({
+      where: { user_id: userId, role: AppRole.ADMIN },
+    });
+    return !!row;
+  }
+
   private throwMappedAuthError(message: string): never {
     const lower = message.toLowerCase();
     if (lower.includes('email not confirmed')) {

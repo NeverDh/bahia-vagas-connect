@@ -91,7 +91,7 @@ function getAuthToken(): string | null {
  * Faz uma requisição HTTP ao backend NestJS.
  *
  * Adiciona automaticamente:
- * - Content-Type: application/json
+ * - Content-Type: application/json (exceto se `body` for `FormData`)
  * - Authorization: Bearer <token> (se logado)
  *
  * @param endpoint - Caminho relativo do endpoint (ex: "/api/jobs")
@@ -119,8 +119,11 @@ async function api<T = unknown>(
   const url = `${API_BASE_URL}${endpoint}`;
   const token = getAuthToken();
 
+  const isFormData =
+    typeof FormData !== 'undefined' && options.body instanceof FormData;
+
   const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
+    ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
     ...(options.headers as Record<string, string> || {}),
   };
 
@@ -158,6 +161,10 @@ api.post = <T = unknown>(endpoint: string, body?: unknown) =>
     method: 'POST',
     body: body ? JSON.stringify(body) : undefined,
   });
+
+/** POST multipart (ex.: candidatura com currículo). Não define Content-Type (boundary automático). */
+api.postFormData = <T = unknown>(endpoint: string, formData: FormData) =>
+  api<T>(endpoint, { method: 'POST', body: formData });
 
 /** PUT request com body */
 api.put = <T = unknown>(endpoint: string, body?: unknown) =>

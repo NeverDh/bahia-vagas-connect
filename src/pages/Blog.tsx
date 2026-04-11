@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
+import { fetchPublishedBlogPosts } from '@/lib/blog-api';
 import { MainLayout } from '@/components/MainLayout';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -46,13 +46,12 @@ const Blog = () => {
 
   const fetchPosts = async () => {
     setLoading(true);
-    const { data } = await supabase
-      .from('blog_posts')
-      .select('id, title, slug, excerpt, featured_image, author, category, tags, published_at, created_at')
-      .eq('status', 'published')
-      .order('published_at', { ascending: false });
-    if (data) setPosts(data);
-    setLoading(false);
+    try {
+      const data = await fetchPublishedBlogPosts();
+      setPosts(data);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const categories = useMemo(() => {

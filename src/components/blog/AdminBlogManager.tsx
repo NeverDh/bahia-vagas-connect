@@ -1,5 +1,9 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { ApiRequestError } from '@/services/api';
+import {
+  fetchAdminBlogPosts,
+  deleteBlogPost,
+} from '@/lib/admin-blog-api';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -29,24 +33,28 @@ export const AdminBlogManager = () => {
 
   const fetchPosts = async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from('blog_posts')
-      .select('id, title, slug, author, status, views, category, published_at, created_at')
-      .order('created_at', { ascending: false });
-    if (data) setPosts(data);
-    if (error) toast.error('Erro ao carregar artigos');
-    setLoading(false);
+    try {
+      const data = await fetchAdminBlogPosts();
+      setPosts(data);
+    } catch (e) {
+      const msg = e instanceof ApiRequestError ? e.message : undefined;
+      toast.error('Erro ao carregar artigos', { description: msg });
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => { fetchPosts(); }, []);
 
   const handleDelete = async (id: string) => {
     if (!window.confirm('Excluir este artigo permanentemente?')) return;
-    const { error } = await supabase.from('blog_posts').delete().eq('id', id);
-    if (error) toast.error('Erro ao excluir');
-    else {
+    try {
+      await deleteBlogPost(id);
       toast.success('Artigo excluído');
-      setPosts(posts.filter(p => p.id !== id));
+      setPosts(posts.filter((p) => p.id !== id));
+    } catch (e) {
+      const msg = e instanceof ApiRequestError ? e.message : undefined;
+      toast.error('Erro ao excluir', { description: msg });
     }
   };
 

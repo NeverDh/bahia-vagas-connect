@@ -1,5 +1,12 @@
 import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { ApiRequestError } from "@/services/api";
+import {
+  fetchAdminMetaTags,
+  createAdminMetaTag,
+  updateAdminMetaTag,
+  deleteAdminMetaTag,
+  type SaveMetaTagPayload,
+} from "@/lib/meta-tags-api";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -44,16 +51,15 @@ export const AdminMetaTags = () => {
 
   const fetchMetaTags = async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from("meta_tags")
-      .select("*")
-      .order("page_path");
-    if (error) {
-      toast.error("Erro ao carregar meta tags");
-    } else {
-      setMetaTags(data || []);
+    try {
+      const data = await fetchAdminMetaTags();
+      setMetaTags(data);
+    } catch (e) {
+      const msg = e instanceof ApiRequestError ? e.message : undefined;
+      toast.error("Erro ao carregar meta tags", { description: msg });
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const handleEdit = (tag: MetaTag) => {
@@ -82,7 +88,7 @@ export const AdminMetaTags = () => {
       return;
     }
 
-    const payload = {
+    const payload: SaveMetaTagPayload = {
       page_path: form.page_path.trim(),
       title: form.title || null,
       description: form.description || null,
@@ -92,25 +98,20 @@ export const AdminMetaTags = () => {
       keywords: form.keywords || null,
     };
 
-    if (editingId) {
-      const { error } = await supabase
-        .from("meta_tags")
-        .update(payload)
-        .eq("id", editingId);
-      if (error) {
-        toast.error("Erro ao atualizar", { description: error.message });
-        return;
+    try {
+      if (editingId) {
+        await updateAdminMetaTag(editingId, payload);
+        toast.success("Meta tag atualizada");
+      } else {
+        await createAdminMetaTag(payload);
+        toast.success("Meta tag criada");
       }
-      toast.success("Meta tag atualizada");
-    } else {
-      const { error } = await supabase
-        .from("meta_tags")
-        .insert(payload);
-      if (error) {
-        toast.error("Erro ao criar", { description: error.message });
-        return;
-      }
-      toast.success("Meta tag criada");
+    } catch (e) {
+      const msg = e instanceof ApiRequestError ? e.message : undefined;
+      toast.error(editingId ? "Erro ao atualizar" : "Erro ao criar", {
+        description: msg,
+      });
+      return;
     }
 
     setDialogOpen(false);
@@ -118,12 +119,13 @@ export const AdminMetaTags = () => {
   };
 
   const handleDelete = async (id: string) => {
-    const { error } = await supabase.from("meta_tags").delete().eq("id", id);
-    if (error) {
-      toast.error("Erro ao deletar");
-    } else {
+    try {
+      await deleteAdminMetaTag(id);
       toast.success("Meta tag deletada");
       setMetaTags(metaTags.filter((t) => t.id !== id));
+    } catch (e) {
+      const msg = e instanceof ApiRequestError ? e.message : undefined;
+      toast.error("Erro ao deletar", { description: msg });
     }
   };
 

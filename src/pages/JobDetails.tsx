@@ -1,6 +1,7 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import api, { ApiRequestError } from "@/services/api";
+import { fetchAppliedJobIds } from "@/lib/jobs-api";
 import { MainLayout } from "@/components/MainLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -72,35 +73,17 @@ const JobDetails = () => {
       if (!id) return;
 
       try {
-        const { data, error } = await supabase
-          .from("jobs")
-          .select(`
-            *,
-            companies (
-              name,
-              logo_url,
-              description,
-              website,
-              location
-            )
-          `)
-          .eq("id", id)
-          .eq("status", "active")
-          .maybeSingle();
-
-        if (error) throw error;
-
-        if (!data) {
-          toast.error("Vaga não encontrada");
-          navigate("/vagas");
-          return;
-        }
+        const data = await api.get<Job>(`/api/jobs/${id}`);
 
         setJob(data as Job);
         markJobAsViewed(data.id);
       } catch (error) {
         console.error("Error fetching job:", error);
-        toast.error("Erro ao carregar vaga");
+        if (error instanceof ApiRequestError && error.statusCode === 404) {
+          toast.error("Vaga não encontrada");
+        } else {
+          toast.error("Erro ao carregar vaga");
+        }
         navigate("/vagas");
       } finally {
         setLoading(false);
@@ -119,15 +102,13 @@ const JobDetails = () => {
 
   const fetchCandidateProfile = async () => {
     if (!user) return;
-    
-    const { data, error } = await supabase
-      .from("candidate_profiles")
-      .select("*")
-      .eq("user_id", user.id)
-      .single();
-
-    if (data && !error) {
-      setCandidateProfile(data);
+    try {
+      const data = await api.get<Record<string, unknown> | null>(
+        "/api/candidates/me",
+      );
+      if (data) setCandidateProfile(data);
+    } catch {
+      setCandidateProfile(null);
     }
   };
 
@@ -136,29 +117,12 @@ const JobDetails = () => {
       setCheckingApplication(false);
       return;
     }
-    
-    const { data: profileData } = await supabase
-      .from("candidate_profiles")
-      .select("id")
-      .eq("user_id", user.id)
-      .single();
-
-    if (!profileData) {
-      setCheckingApplication(false);
-      return;
+    try {
+      const ids = await fetchAppliedJobIds();
+      setHasApplied(ids.includes(id));
+    } catch {
+      setHasApplied(false);
     }
-
-    const { data, error } = await supabase
-      .from("applications")
-      .select("id")
-      .eq("candidate_id", profileData.id)
-      .eq("job_id", id)
-      .maybeSingle();
-
-    if (!error && data) {
-      setHasApplied(true);
-    }
-    
     setCheckingApplication(false);
   };
 
@@ -373,11 +337,9 @@ const JobDetails = () => {
                     {candidateProfile && (
                       <ApplicationForm
                         jobId={id!}
-                        candidateId={candidateProfile.id}
                         onSuccess={() => {
                           setIsDialogOpen(false);
                           setHasApplied(true);
-                          toast.success("Candidatura enviada com sucesso!");
                         }}
                       />
                     )}

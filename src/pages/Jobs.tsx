@@ -10,8 +10,13 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
 import { Search, SlidersHorizontal, X } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import {
+  buildJobsListQuery,
+  fetchAppliedJobIds,
+  type JobsListResponse,
+} from "@/lib/jobs-api";
+import api from "@/services/api";
 import { useAuth } from "@/hooks/useAuth";
 import { getSlugByMunicipio } from "@/lib/bahia-municipios";
 import { JobCarouselSection } from "@/components/JobCarouselSection";
@@ -76,138 +81,21 @@ const Jobs = ({ initialLocation }: JobsProps = {}) => {
     try {
       setLoading(true);
       const normalizedSearch = searchTerm.trim().replace(/,/g, " ");
-      
-      // Use RPC search function for accent-insensitive, partial-word search
-      let searchJobIds: string[] | null = null;
-      if (normalizedSearch) {
-        const { data: searchResults, error: searchError } = await supabase
-          .rpc("search_jobs", { search_text: normalizedSearch });
-        
-        if (searchError) throw searchError;
-        searchJobIds = (searchResults as string[]) || [];
-        
-        // If search returned no results, short-circuit
-        if (searchJobIds.length === 0) {
-          setJobs([]);
-          setTotalJobs(0);
-          setLoading(false);
-          return;
-        }
-      }
 
-      // Build base query for counting
-      let countQuery = supabase
-        .from("jobs")
-        .select("*", { count: "exact", head: true })
-        .eq("status", "active");
+      const path = buildJobsListQuery({
+        page: currentPage,
+        limit: itemsPerPage,
+        search: normalizedSearch || undefined,
+        remoteOnly: filters.remoteOnly,
+        contractTypes: filters.contractTypes,
+        experienceLevels: filters.experienceLevels,
+        location: filters.location || undefined,
+        sortOrder: filters.sortOrder,
+      });
 
-      if (searchJobIds) {
-        countQuery = countQuery.in("id", searchJobIds);
-      }
-
-      if (filters.remoteOnly) {
-        countQuery = countQuery.eq("remote_option", true);
-      }
-
-      if (filters.contractTypes.length > 0) {
-        countQuery = countQuery.in("contract_type", filters.contractTypes as any);
-      }
-
-      if (filters.experienceLevels.length > 0) {
-        const titleKeywords: Record<string, string[]> = {
-          auxiliar: ["auxiliar"],
-          assistente: ["assistente"],
-          intern: ["estágio", "estagiário", "estagiario"],
-        };
-
-        const orConditions: string[] = [];
-        const levelsForDb = filters.experienceLevels;
-        
-        orConditions.push(`experience_level.in.(${levelsForDb.join(",")})`);
-        
-        for (const level of levelsForDb) {
-          const keywords = titleKeywords[level];
-          if (keywords) {
-            for (const kw of keywords) {
-              orConditions.push(`title.ilike.%${kw}%`);
-            }
-          }
-        }
-
-        countQuery = countQuery.or(orConditions.join(","));
-      }
-
-      if (filters.location) {
-        countQuery = countQuery.ilike("location", `%${filters.location}%`);
-      }
-
-      // Get total count
-      const { count, error: countError } = await countQuery;
-      
-      if (countError) throw countError;
-      setTotalJobs(count || 0);
-
-      // Build data query with pagination
-      const from = (currentPage - 1) * itemsPerPage;
-      const to = from + itemsPerPage - 1;
-
-      let dataQuery = supabase
-        .from("jobs")
-        .select(`
-          *,
-          companies (
-            name,
-            logo_url
-          )
-        `)
-        .eq("status", "active")
-        .order("created_at", { ascending: filters.sortOrder === "oldest" })
-        .range(from, to);
-
-      if (searchJobIds) {
-        dataQuery = dataQuery.in("id", searchJobIds);
-      }
-
-      if (filters.remoteOnly) {
-        dataQuery = dataQuery.eq("remote_option", true);
-      }
-
-      if (filters.contractTypes.length > 0) {
-        dataQuery = dataQuery.in("contract_type", filters.contractTypes as any);
-      }
-
-      if (filters.experienceLevels.length > 0) {
-        const titleKeywords: Record<string, string[]> = {
-          auxiliar: ["auxiliar"],
-          assistente: ["assistente"],
-          intern: ["estágio", "estagiário", "estagiario"],
-        };
-
-        const orConditions: string[] = [];
-        const levelsForDb = filters.experienceLevels;
-        
-        orConditions.push(`experience_level.in.(${levelsForDb.join(",")})`);
-        
-        for (const level of levelsForDb) {
-          const keywords = titleKeywords[level];
-          if (keywords) {
-            for (const kw of keywords) {
-              orConditions.push(`title.ilike.%${kw}%`);
-            }
-          }
-        }
-
-        dataQuery = dataQuery.or(orConditions.join(","));
-      }
-
-      if (filters.location) {
-        dataQuery = dataQuery.ilike("location", `%${filters.location}%`);
-      }
-
-      const { data, error } = await dataQuery;
-
-      if (error) throw error;
-      setJobs(data || []);
+      const res = await api.get<JobsListResponse>(path);
+      setJobs(res.data as any[]);
+      setTotalJobs(res.total);
     } catch (error: any) {
       toast({
         title: "Erro ao carregar vagas",
@@ -221,23 +109,11 @@ const Jobs = ({ initialLocation }: JobsProps = {}) => {
 
   const fetchAppliedJobs = async () => {
     if (!user) return;
-
-    const { data: profileData } = await supabase
-      .from("candidate_profiles")
-      .select("id")
-      .eq("user_id", user.id)
-      .maybeSingle();
-
-    if (!profileData) return;
-
-    const { data: applications } = await supabase
-      .from("applications")
-      .select("job_id")
-      .eq("candidate_id", profileData.id);
-
-    if (applications) {
-      const jobIds = new Set(applications.map(app => app.job_id));
-      setAppliedJobIds(jobIds);
+    try {
+      const ids = await fetchAppliedJobIds();
+      setAppliedJobIds(new Set(ids));
+    } catch {
+      setAppliedJobIds(new Set());
     }
   };
 

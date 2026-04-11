@@ -4,8 +4,11 @@ import { MainLayout } from "@/components/MainLayout";
 import { JobCard } from "@/components/JobCard";
 import { Pagination } from "@/components/Pagination";
 import { AdBanner } from "@/components/AdBanner";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import {
+  fetchAppliedJobIds,
+  fetchJobsList,
+} from "@/lib/jobs-api";
 import { SeoJobPage, seoJobPages } from "@/lib/seo-job-pages";
 import { JobCarouselSection } from "@/components/JobCarouselSection";
 
@@ -69,53 +72,23 @@ const JobsByCategory = ({ page }: JobsByCategoryProps) => {
       setLoading(true);
 
       if (page.filterType === "remote") {
-        // For home office: filter by remote_option = true
-        const { count } = await supabase
-          .from("jobs")
-          .select("*", { count: "exact", head: true })
-          .eq("status", "active")
-          .eq("remote_option", true);
-
-        setTotalJobs(count || 0);
-
-        const from = (currentPage - 1) * itemsPerPage;
-        const to = from + itemsPerPage - 1;
-
-        const { data } = await supabase
-          .from("jobs")
-          .select("*, companies(name, logo_url)")
-          .eq("status", "active")
-          .eq("remote_option", true)
-          .order("created_at", { ascending: false })
-          .range(from, to);
-
-        setJobs(data || []);
+        const res = await fetchJobsList({
+          page: currentPage,
+          limit: itemsPerPage,
+          remoteOnly: true,
+          sortOrder: "newest",
+        });
+        setTotalJobs(res.total);
+        setJobs(res.data as any[]);
       } else {
-        // For keyword-based search: use OR conditions on title
-        const orConditions = page.keywords
-          .map((kw) => `title.ilike.%${kw}%`)
-          .join(",");
-
-        const { count } = await supabase
-          .from("jobs")
-          .select("*", { count: "exact", head: true })
-          .eq("status", "active")
-          .or(orConditions);
-
-        setTotalJobs(count || 0);
-
-        const from = (currentPage - 1) * itemsPerPage;
-        const to = from + itemsPerPage - 1;
-
-        const { data } = await supabase
-          .from("jobs")
-          .select("*, companies(name, logo_url)")
-          .eq("status", "active")
-          .or(orConditions)
-          .order("created_at", { ascending: false })
-          .range(from, to);
-
-        setJobs(data || []);
+        const res = await fetchJobsList({
+          page: currentPage,
+          limit: itemsPerPage,
+          titleKeywords: page.keywords,
+          sortOrder: "newest",
+        });
+        setTotalJobs(res.total);
+        setJobs(res.data as any[]);
       }
     } catch (error) {
       console.error("Erro ao carregar vagas:", error);
@@ -126,18 +99,11 @@ const JobsByCategory = ({ page }: JobsByCategoryProps) => {
 
   const fetchAppliedJobs = async () => {
     if (!user) return;
-    const { data: profileData } = await supabase
-      .from("candidate_profiles")
-      .select("id")
-      .eq("user_id", user.id)
-      .maybeSingle();
-    if (!profileData) return;
-    const { data: applications } = await supabase
-      .from("applications")
-      .select("job_id")
-      .eq("candidate_id", profileData.id);
-    if (applications) {
-      setAppliedJobIds(new Set(applications.map((app) => app.job_id)));
+    try {
+      const ids = await fetchAppliedJobIds();
+      setAppliedJobIds(new Set(ids));
+    } catch {
+      setAppliedJobIds(new Set());
     }
   };
 

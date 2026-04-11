@@ -8,7 +8,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { RichTextEditor } from './RichTextEditor';
-import { supabase } from '@/integrations/supabase/client';
+import { ApiRequestError } from '@/services/api';
+import {
+  fetchAdminBlogPost,
+  createBlogPost,
+  updateBlogPost,
+  uploadAdminBlogImage,
+  type BlogPostPayload,
+} from '@/lib/admin-blog-api';
 import { toast } from 'sonner';
 import { Save, Eye, X, Upload, Search } from 'lucide-react';
 import { optimizeImage } from '@/lib/image-optimizer';
@@ -63,28 +70,30 @@ export const BlogPostForm = ({ postId, onSaved, onCancel }: BlogPostFormProps) =
   }, [postId]);
 
   const loadPost = async (id: string) => {
-    const { data, error } = await supabase
-      .from('blog_posts')
-      .select('*')
-      .eq('id', id)
-      .single();
-    if (data) {
+    try {
+      const data = await fetchAdminBlogPost(id) as Record<string, unknown>;
       setPost({
-        ...data,
-        tags: data.tags || [],
-        excerpt: data.excerpt || '',
-        featured_image: data.featured_image || '',
-        author: data.author || 'Equipe BahiaVagas',
-        category: data.category || '',
-        meta_title: data.meta_title || '',
-        meta_description: data.meta_description || '',
-        og_title: data.og_title || '',
-        og_description: data.og_description || '',
-        og_image: data.og_image || '',
-        canonical_url: data.canonical_url || '',
+        id: String(data.id),
+        title: String(data.title ?? ''),
+        slug: String(data.slug ?? ''),
+        content: String(data.content ?? ''),
+        excerpt: String(data.excerpt ?? ''),
+        featured_image: String(data.featured_image ?? ''),
+        author: String(data.author ?? 'Equipe BahiaVagas'),
+        category: String(data.category ?? ''),
+        tags: (data.tags as string[]) || [],
+        meta_title: String(data.meta_title ?? ''),
+        meta_description: String(data.meta_description ?? ''),
+        og_title: String(data.og_title ?? ''),
+        og_description: String(data.og_description ?? ''),
+        og_image: String(data.og_image ?? ''),
+        canonical_url: String(data.canonical_url ?? ''),
+        status: String(data.status ?? 'draft'),
+        published_at: (data.published_at as string) || null,
       });
+    } catch {
+      toast.error('Erro ao carregar artigo');
     }
-    if (error) toast.error('Erro ao carregar artigo');
   };
 
   const generateSlug = (title: string) => {
@@ -110,16 +119,11 @@ export const BlogPostForm = ({ postId, onSaved, onCancel }: BlogPostFormProps) =
     try {
       toast.info('Otimizando imagem (1200x675, WEBP)...');
       const { file: optimized, altText } = await optimizeImage(file, 'featured', post.title || 'blog');
-      const fileName = optimized.name;
-      const { error } = await supabase.storage.from('blog-images').upload(fileName, optimized, {
-        contentType: 'image/webp',
-      });
-      if (error) throw error;
-      const { data: urlData } = supabase.storage.from('blog-images').getPublicUrl(fileName);
-      setPost(prev => ({
+      const publicUrl = await uploadAdminBlogImage(optimized);
+      setPost((prev) => ({
         ...prev,
-        featured_image: urlData.publicUrl,
-        og_image: prev.og_image || urlData.publicUrl,
+        featured_image: publicUrl,
+        og_image: prev.og_image || publicUrl,
       }));
       const sizeKB = Math.round(optimized.size / 1024);
       toast.success(`Imagem otimizada (${sizeKB} KB) e enviada`);
@@ -149,35 +153,43 @@ export const BlogPostForm = ({ postId, onSaved, onCancel }: BlogPostFormProps) =
     }
     setLoading(true);
     try {
-      const payload = {
-        ...post,
+      const payload: BlogPostPayload = {
+        title: post.title.trim(),
+        slug: post.slug.trim(),
+        content: post.content,
+        excerpt: post.excerpt.trim() || null,
+        featured_image: post.featured_image.trim() || null,
+        author: post.author.trim() || 'Equipe BahiaVagas',
+        category: post.category.trim() || null,
+        tags: post.tags,
+        meta_title: post.meta_title.trim() || null,
+        meta_description: post.meta_description.trim() || null,
+        og_title: post.og_title.trim() || null,
+        og_description: post.og_description.trim() || null,
+        og_image: post.og_image.trim() || null,
+        canonical_url: post.canonical_url.trim() || null,
         status: publishNow ? 'published' : post.status,
-        published_at: publishNow && !post.published_at ? new Date().toISOString() : post.published_at,
+        published_at:
+          publishNow && !post.published_at
+            ? new Date().toISOString()
+            : post.published_at,
       };
-      delete (payload as any).id;
 
       if (postId) {
-        const { error } = await supabase.from('blog_posts').update(payload).eq('id', postId);
-        if (error) {
-          if (error.message.includes('duplicate') || error.message.includes('unique')) {
-            toast.error('Slug já existe. Escolha outro.');
-          } else throw error;
-          return;
-        }
+        await updateBlogPost(postId, payload);
         toast.success('Artigo atualizado');
       } else {
-        const { error } = await supabase.from('blog_posts').insert(payload);
-        if (error) {
-          if (error.message.includes('duplicate') || error.message.includes('unique')) {
-            toast.error('Slug já existe. Escolha outro.');
-          } else throw error;
-          return;
-        }
+        await createBlogPost(payload);
         toast.success('Artigo criado');
       }
       onSaved();
-    } catch (err: any) {
-      toast.error('Erro ao salvar: ' + (err.message || ''));
+    } catch (err: unknown) {
+      if (err instanceof ApiRequestError && err.statusCode === 409) {
+        toast.error('Slug já existe. Escolha outro.');
+      } else {
+        const msg = err instanceof ApiRequestError ? err.message : '';
+        toast.error('Erro ao salvar' + (msg ? `: ${msg}` : ''));
+      }
     } finally {
       setLoading(false);
     }

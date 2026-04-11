@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import api from "@/services/api";
 import { MapPin, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatDistanceToNow } from "date-fns";
@@ -23,15 +23,12 @@ const useCityJobs = (cityName: string) =>
   useQuery({
     queryKey: ["recent-jobs", cityName],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("jobs")
-        .select("id, title, created_at, company:companies(name)")
-        .eq("status", "active")
-        .ilike("location", `%${cityName}%`)
-        .order("created_at", { ascending: false })
-        .limit(5);
-      if (error) throw error;
-      return (data ?? []) as unknown as CityJob[];
+      const q = new URLSearchParams({
+        name: cityName,
+        limit: "5",
+      });
+      const data = await api.get<CityJob[]>(`/api/jobs/recent/city?${q}`);
+      return data ?? [];
     },
   });
 
