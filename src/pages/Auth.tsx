@@ -5,7 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Briefcase, User } from "lucide-react";
+import { Briefcase, Loader2, User } from "lucide-react";
 import { useAuth, UserRole } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
@@ -13,6 +13,7 @@ import { useEffect } from "react";
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [role, setRole] = useState<UserRole>("candidate");
+  const [submitting, setSubmitting] = useState(false);
   const { signUp, signIn, user, loading } = useAuth();
   const navigate = useNavigate();
 
@@ -25,24 +26,31 @@ const Auth = () => {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (submitting) return;
     const formData = new FormData(e.currentTarget);
     const email = formData.get("email") as string;
     const password = formData.get("password") as string;
 
-    if (isLogin) {
-      await signIn(email, password);
-    } else {
-      const profileData = role === "candidate" 
-        ? {
-            full_name: formData.get("full_name") as string,
-            phone: formData.get("phone") as string,
-          }
-        : {
-            name: formData.get("company_name") as string,
-            location: formData.get("location") as string,
-          };
+    setSubmitting(true);
+    try {
+      if (isLogin) {
+        await signIn(email, password);
+      } else {
+        const profileData =
+          role === "candidate"
+            ? {
+                full_name: formData.get("full_name") as string,
+                phone: formData.get("phone") as string,
+              }
+            : {
+                name: formData.get("company_name") as string,
+                location: formData.get("location") as string,
+              };
 
-      await signUp(email, password, role, profileData);
+        await signUp(email, password, role, profileData);
+      }
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -87,7 +95,7 @@ const Auth = () => {
                 </Tabs>
               )}
 
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <form onSubmit={handleSubmit} className="space-y-4" aria-busy={submitting}>
                 {!isLogin && (
                   <>
                     {role === "candidate" ? (
@@ -163,16 +171,26 @@ const Auth = () => {
                   />
                 </div>
 
-                <Button type="submit" className="w-full">
-                  {isLogin ? "Entrar" : "Criar Conta"}
+                <Button type="submit" className="w-full" disabled={submitting}>
+                  {submitting ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      {isLogin ? "Entrando…" : "Criando conta…"}
+                    </>
+                  ) : isLogin ? (
+                    "Entrar"
+                  ) : (
+                    "Criar Conta"
+                  )}
                 </Button>
               </form>
 
               <div className="mt-4 text-center text-sm">
                 <button
                   type="button"
+                  disabled={submitting}
                   onClick={() => setIsLogin(!isLogin)}
-                  className="text-primary hover:underline"
+                  className="text-primary hover:underline disabled:opacity-50"
                 >
                   {isLogin 
                     ? "Não tem conta? Cadastre-se" 

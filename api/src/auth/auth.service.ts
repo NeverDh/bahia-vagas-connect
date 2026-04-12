@@ -78,7 +78,8 @@ export class AuthService {
     const { data, error } = await client.auth.admin.createUser({
       email: dto.email,
       password: dto.password,
-      email_confirm: false,
+      /** Confirma o e-mail na criação — login imediato sem etapa de confirmação. */
+      email_confirm: true,
       user_metadata: {
         role: dto.role,
         full_name: dto.full_name,
@@ -93,17 +94,38 @@ export class AuthService {
       this.throwMappedAuthError(error.message);
     }
 
-    const user = data.user;
-    if (!user) {
+    const created = data.user;
+    if (!created) {
       throw new BadRequestException('Não foi possível criar o usuário.');
     }
 
-    // admin.createUser não retorna sessão; perfil/role após confirmar email + login.
+    const { data: signData, error: signError } =
+      await client.auth.signInWithPassword({
+        email: dto.email,
+        password: dto.password,
+      });
+
+    if (signError || !signData.session || !signData.user) {
+      this.logger.warn(
+        `signup created user but auto-login failed: ${signError?.message ?? 'no session'}`,
+      );
+      return {
+        user: this.serializeUser(created),
+        session: null,
+        userRole: null,
+        isAdmin: false,
+      };
+    }
+
+    const user = signData.user;
+    await this.ensureUserProfile(user);
+    const { userRole, isAdmin } = await this.resolveUserAccess(user.id);
+
     return {
       user: this.serializeUser(user),
-      session: null,
-      userRole: null,
-      isAdmin: false,
+      session: this.buildSessionPayload(signData.session, user),
+      userRole,
+      isAdmin,
     };
   }
 
@@ -173,7 +195,30 @@ export class AuthService {
   }
 
   async ensureUserProfile(authUser: User): Promise<void> {
-    const metadata = (authUser.user_metadata || {}) as Record<string, unknown>;
+    await this.ensureProfileRowsFromMetadata(
+      authUser.id,
+      authUser.email ?? undefined,
+      (authUser.user_metadata || {}) as Record<string, unknown>,
+    );
+  }
+
+  /**
+   * Garante linhas em `candidate_profiles` / `companies` a partir do JWT (mesma lógica do login).
+   * Cobre perfil ausente quando o token é válido mas `ensureUserProfile` não rodou antes.
+   */
+  async ensureUserProfileFromJwtUser(jwtUser: JwtValidatedUser): Promise<void> {
+    await this.ensureProfileRowsFromMetadata(
+      jwtUser.userId,
+      jwtUser.email,
+      jwtUser.user_metadata ?? {},
+    );
+  }
+
+  private async ensureProfileRowsFromMetadata(
+    userId: string,
+    email: string | undefined,
+    metadata: Record<string, unknown>,
+  ): Promise<void> {
     const role = metadata.role as FunctionalRole | undefined;
 
     if (!role || (role !== 'candidate' && role !== 'company')) {
@@ -182,16 +227,16 @@ export class AuthService {
 
     if (role === 'candidate') {
       const exists = await this.candidateRepo.exist({
-        where: { user_id: authUser.id },
+        where: { user_id: userId },
       });
       if (!exists) {
         const fullName =
           (metadata.full_name as string) ||
-          authUser.email?.split('@')[0] ||
+          email?.split('@')[0] ||
           'Candidato';
         const phone = (metadata.phone as string) || null;
         await this.candidateRepo.insert({
-          user_id: authUser.id,
+          user_id: userId,
           full_name: fullName,
           phone,
         });
@@ -201,13 +246,13 @@ export class AuthService {
 
     if (role === 'company') {
       const exists = await this.companyRepo.exist({
-        where: { user_id: authUser.id },
+        where: { user_id: userId },
       });
       if (!exists) {
         const name = (metadata.name as string) || 'Empresa';
         const location = (metadata.location as string) || null;
         await this.companyRepo.insert({
-          user_id: authUser.id,
+          user_id: userId,
           name,
           location,
         });

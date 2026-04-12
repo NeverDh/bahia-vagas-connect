@@ -31,6 +31,7 @@ import { CookieGuard } from "./components/CookieGuard";
 import { AuthProvider } from "./hooks/useAuth";
 import Analytics from "./pages/Analytics";
 import { useAnalyticsTracker } from "./hooks/useAnalyticsTracker";
+import { ApiGlobalLoadingBar } from "./components/ApiGlobalLoadingBar";
 
 const MetaTagsProvider = ({ children }: { children: React.ReactNode }) => {
   useMetaTags();
@@ -52,6 +53,7 @@ const App = () => (
       <TooltipProvider>
         <Toaster />
         <Sonner />
+        <ApiGlobalLoadingBar />
         <BrowserRouter>
           <AuthProvider>
             <CookieConsent />

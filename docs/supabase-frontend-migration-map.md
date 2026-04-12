@@ -105,7 +105,7 @@ Cada linha: onde está hoje, o quê faz, risco resumido, destino sugerido no Nes
 | `import-jobs` | ~~Sim~~ — migrado para Nest | JWT admin + `RAPIDAPI_KEY` no servidor | **Alto** | **`POST /api/admin/jobs/import`** (implementado) |
 | `validate-cnpj` | Sim — `CompanyDashboard.tsx` | Anon | Médio | `POST /api/integrations/validate-cnpj` |
 | `sitemap` | Não diretamente no `src/` | Público | Baixo | `GET /api/seo/sitemap.xml` ou manter Edge até DNS/robots migrarem; `public/robots.txt` aponta para `sitemap.xml` no domínio principal |
-| `auth-email-hook` | Não (invocada pelo Supabase Auth) | Hook configurado no projeto | Baixo | Manter no Supabase ou substituir por provedor de email no Nest mais adiante |
+| `auth-email-hook` | ~~Hook Send Email~~ | — | Baixo | **Operação:** desativar hook no Dashboard e usar e-mail nativo do Supabase (+ SMTP opcional). Ver `docs/supabase-auth-email.md`. |
 
 ---
 

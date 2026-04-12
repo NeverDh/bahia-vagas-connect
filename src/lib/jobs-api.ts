@@ -65,6 +65,7 @@ export async function fetchJobsList(
 export async function fetchAppliedJobIds(): Promise<string[]> {
   const res = await api.get<AppliedJobIdsResponse>(
     "/api/jobs/candidate/applied-ids",
+    { skipSessionInvalidOn401: true },
   );
   return res.jobIds ?? [];
 }

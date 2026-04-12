@@ -34,10 +34,13 @@ export class AuthController {
   @ApiOperation({
     summary: 'Cadastro de usuário',
     description:
-      'Cria conta no Supabase Auth com confirmação de email (quando habilitada no projeto). ' +
-      'Se já existir sessão (ex.: confirmação desligada), cria perfil candidato/empresa e retorna JWT.',
+      'Cria conta com e-mail já confirmado (`email_confirm: true`) e tenta login imediato; ' +
+      'em caso de sucesso retorna JWT + perfil/role. Não depende de confirmação por link.',
   })
-  @ApiResponse({ status: 201, description: 'Usuário criado; pode incluir sessão ou null se email pendente.' })
+  @ApiResponse({
+    status: 201,
+    description: 'Usuário criado; em condições normais inclui sessão (auto-login).',
+  })
   @ApiResponse({ status: 400, description: 'Validação ou erro do provedor de auth' })
   @ApiResponse({ status: 409, description: 'Email já cadastrado' })
   async signUp(@Body() dto: SignUpDto): Promise<AuthPayload> {

@@ -91,6 +91,26 @@ api/
 | `SUPABASE_SERVICE_ROLE_KEY` | ✅ | Chave service_role (NUNCA expor!) |
 | `RAPIDAPI_KEY` | Não | Chave JSearch para importação de vagas |
 | `ANALYTICS_IP_SALT` | Não | Salt para hash de IP no analytics |
+| `SUPABASE_CONNECT_TIMEOUT_MS` | Não | Timeout **TCP/TLS** do Undici ao Supabase (default **60000**). O `fetch` global do Node ignora isso e usa ~10s — o cliente usa `undici` + `Agent` por isso. |
+| `SUPABASE_HEADERS_TIMEOUT_MS` | Não | Tempo máx. para receber headers da resposta (default **120000**). |
+| `SUPABASE_BODY_TIMEOUT_MS` | Não | Tempo máx. entre chunks do corpo (default **120000**). |
+| `SUPABASE_FETCH_TIMEOUT_MS` | Não | Teto do `AbortSignal` da requisição (default **120000**; nunca menor que `connect + 30s`). |
+| `SUPABASE_JWT_SECRET` | ✅ | Validação JWT nas rotas protegidas (Settings → API no painel Supabase). |
+
+### Cadastro sem confirmação de e-mail
+
+O `POST /api/auth/signup` usa `email_confirm: true` no Admin API e faz login automático. No painel Supabase, em **Authentication → Providers → Email**, pode desligar **“Confirm email”** para alinhar o projeto (evita mensagens ou fluxos só para signups feitos direto no Auth, fora da API).
+
+### Erro `ConnectTimeoutError` / `fetch failed` no signup ou login
+
+Significa que o processo Node **não conseguiu abrir TCP/TLS** para `*.supabase.co` (ou Cloudflare) a tempo. Não é bug do Nest em si.
+
+1. No mesmo PC: `curl -v https://<seu-ref>.supabase.co/auth/v1/health` (PowerShell) — deve responder rápido.
+2. Desligue **VPN** e teste de novo; verifique **antivírus/firewall** permitindo **Node.js** em saída HTTPS.
+3. Rede corporativa às vezes bloqueia domínios; teste em outra rede (4G).
+4. Confirme `SUPABASE_URL` sem espaços e com `https://`.
+5. Aumente no `.env`, por exemplo: `SUPABASE_CONNECT_TIMEOUT_MS=90000` e `SUPABASE_FETCH_TIMEOUT_MS=180000`.
+6. No Windows, se `curl` ao Supabase funciona mas o Node falha: `set NODE_OPTIONS=--dns-result-order=ipv4first` antes de subir a API.
 
 ## Licença
 

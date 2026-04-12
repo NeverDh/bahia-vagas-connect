@@ -469,11 +469,26 @@ const CompanyDashboard = () => {
 
   const totalPages = Math.ceil(totalJobs / itemsPerPage);
 
-  if (authLoading || (user && !userRole)) {
+  if (authLoading) {
     return (
       <MainLayout>
         <div className="px-4 py-8">
           <p className="text-center text-muted-foreground">Carregando...</p>
+        </div>
+      </MainLayout>
+    );
+  }
+
+  if (user && userRole === null) {
+    return (
+      <MainLayout>
+        <div className="px-4 py-8 max-w-md mx-auto text-center space-y-4">
+          <p className="text-muted-foreground">
+            Não foi possível identificar o tipo da sua conta. Faça login novamente.
+          </p>
+          <Button variant="default" onClick={() => navigate("/auth")}>
+            Ir para login
+          </Button>
         </div>
       </MainLayout>
     );

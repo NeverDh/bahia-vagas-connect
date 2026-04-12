@@ -8,7 +8,7 @@ import { AuthService } from '../auth.service.js';
 import type { JwtValidatedUser } from '../strategies/jwt.strategy.js';
 
 /**
- * Exige JWT válido (use após JwtAuthGuard) e role `admin` em `user_roles`.
+ * Exige sessão válida (use após JwtAuthGuard) e role `admin` em `user_roles`.
  */
 @Injectable()
 export class AdminGuard implements CanActivate {

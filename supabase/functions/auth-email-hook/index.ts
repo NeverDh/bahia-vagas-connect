@@ -1,3 +1,8 @@
+/**
+ * @deprecated Envio de e-mail de Auth foi migrado para o mecanismo nativo do Supabase
+ * (desative o Send Email Hook no Dashboard e use Authentication → Email Templates).
+ * Ver docs/supabase-auth-email.md
+ */
 import * as React from 'npm:react@18.3.1'
 import { renderAsync } from 'npm:@react-email/components@0.0.22'
 import { sendLovableEmail, parseEmailWebhookPayload } from 'npm:@lovable.dev/email-js'

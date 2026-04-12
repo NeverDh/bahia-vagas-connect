@@ -31,6 +31,13 @@ Registro das fases de migração do frontend para a API NestJS. Complementa refe
 
 **Pendente neste domínio:** sitemap (Edge ou `GET /api/seo/sitemap.xml`); `POST /api/auth/refresh` se desejado.
 
+## E-mail de autenticação — Supabase nativo (2026-04-11)
+
+- **Objetivo:** deixar de depender da Lovable para envio transacional do Auth.
+- **Ação no projeto Supabase (manual):** desativar o **Send Email Hook** que apontava para `auth-email-hook`; configurar **Authentication → URL Configuration** e **Email Templates**; opcionalmente **SMTP personalizado** em Project Settings.
+- **Documentação:** `docs/supabase-auth-email.md`.
+- **Código:** `supabase/functions/auth-email-hook/` marcada como legado (comentário no `index.ts`); não é necessário ao fluxo novo.
+
 ## Módulo 5 — Perfil candidato + candidaturas + multipart (2026-04-11)
 
 ### Backend
@@ -125,7 +132,7 @@ Registro das fases de migração do frontend para a API NestJS. Complementa refe
 
 - **Módulo** `AuthModule` com `AuthService`, `AuthController`, DTOs (`LoginDto`, `SignUpDto`), `JwtStrategy` (`passport-jwt`, algoritmo HS256) e `JwtAuthGuard`.
 - **Endpoints**
-  - `POST /api/auth/signup` — `auth.admin.createUser` com `email_confirm: false` (fluxo de confirmação de email do Supabase quando habilitado no projeto). Não retorna sessão até o usuário confirmar e fazer login.
+  - `POST /api/auth/signup` — `auth.admin.createUser` com `email_confirm: true` (sem obrigatoriedade de confirmação por link) + `signInWithPassword` para retornar JWT e criar perfil na mesma resposta quando possível.
   - `POST /api/auth/login` — `signInWithPassword`; após sucesso executa criação de perfil (`candidate_profiles` / `companies`) conforme `user_metadata.role` e resolve `userRole` (equivalente ao antigo `ensureUserProfile` + `fetchUserRole` no React).
   - `POST /api/auth/logout` — protegido por JWT; resposta `{ ok: true }`. O cliente deve apagar tokens; o JWT permanece válido até expirar (padrão stateless).
   - `GET /api/auth/me` — protegido por JWT; valida token com `getUser`, sincroniza perfil e retorna `user`, `session` (stub com `access_token`; `refresh_token` pode ser mantido só no cliente) e `userRole`.

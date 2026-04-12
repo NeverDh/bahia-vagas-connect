@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import api, { ApiRequestError } from "@/services/api";
 import { fetchAppliedJobIds } from "@/lib/jobs-api";
+import { fetchCandidateProfile } from "@/lib/candidates-api";
 import { MainLayout } from "@/components/MainLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -93,19 +94,19 @@ const JobDetails = () => {
     fetchJob();
     
     if (user && userRole === "candidate") {
-      fetchCandidateProfile();
+      void loadCandidateForApplication();
       checkIfAlreadyApplied();
     } else {
       setCheckingApplication(false);
     }
   }, [id, navigate, user, userRole]);
 
-  const fetchCandidateProfile = async () => {
+  const loadCandidateForApplication = async () => {
     if (!user) return;
     try {
-      const data = await api.get<Record<string, unknown> | null>(
-        "/api/candidates/me",
-      );
+      const data = await fetchCandidateProfile({
+        skipSessionInvalidOn401: true,
+      });
       if (data) setCandidateProfile(data);
     } catch {
       setCandidateProfile(null);

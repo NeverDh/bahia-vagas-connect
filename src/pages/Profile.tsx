@@ -70,21 +70,29 @@ const Profile = () => {
     if (authLoading) return;
 
     if (!user) {
+      setLoading(false);
       toast.error("Você precisa fazer login");
       navigate("/auth");
       return;
     }
 
-    if (userRole && userRole !== "candidate") {
+    if (userRole === "candidate") {
+      void fetchProfile();
+      void fetchApplications();
+      return;
+    }
+
+    setLoading(false);
+    if (userRole === "company") {
       toast.error("Esta página é apenas para candidatos");
       navigate("/");
       return;
     }
 
-    if (userRole === "candidate") {
-      fetchProfile();
-      fetchApplications();
-    }
+    toast.error("Perfil de candidato indisponível", {
+      description: "Não foi possível identificar sua conta. Tente sair e entrar novamente.",
+    });
+    navigate("/");
   }, [user, userRole, authLoading, navigate]);
 
   useEffect(() => {

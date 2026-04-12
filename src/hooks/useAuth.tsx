@@ -12,6 +12,7 @@ import api, {
   AUTH_REFRESH_TOKEN_KEY,
   AUTH_ACCESS_TOKEN_KEY,
   clearStoredAuthTokens,
+  SESSION_INVALID_EVENT,
   setStoredAuthTokens,
 } from "@/services/api";
 
@@ -186,6 +187,24 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     };
   }, [applyAuthPayload]);
 
+  useEffect(() => {
+    const onSessionInvalid = () => {
+      setUser(null);
+      setSession(null);
+      setUserRole(null);
+      setIsAdmin(false);
+      toast({
+        title: "Sessão expirada ou inválida",
+        description: "Faça login novamente.",
+        variant: "destructive",
+      });
+      navigate("/auth", { replace: true });
+    };
+    window.addEventListener(SESSION_INVALID_EVENT, onSessionInvalid);
+    return () =>
+      window.removeEventListener(SESSION_INVALID_EVENT, onSessionInvalid);
+  }, [navigate, toast]);
+
   const value: AuthContextType = {
     user,
     session,
@@ -218,7 +237,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           toast({
             title: "Conta criada com sucesso!",
             description:
-              "Confirme seu email e faça login para concluir a criação do perfil.",
+              "Faça login com sua senha para continuar (sessão automática indisponível).",
           });
         }
 

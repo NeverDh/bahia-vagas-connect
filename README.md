@@ -154,7 +154,7 @@ O **BahiaVagas** é uma plataforma SPA (Single Page Application) que conecta can
 | `lucide-react` | ^0.462.0 |
 | `react-day-picker` | ^8.10.1 |
 
-### Backend (Lovable Cloud / Supabase)
+### Backend (Supabase)
 
 | Tecnologia | Versão | Descrição |
 |---|---|---|
@@ -563,18 +563,13 @@ Todas as Edge Functions rodam em **Deno** e são deployadas automaticamente.
 **JWT**: Não requerido  
 **Descrição**: Valida CNPJ com verificação de dígitos e consulta opcional a API externa.
 
-### 5. `auth-email-hook`
+### 5. `auth-email-hook` (legado / desativado na operação atual)
 **Endpoint**: `POST /functions/v1/auth-email-hook`  
 **JWT**: Não requerido  
-**Descrição**: Hook de e-mails de autenticação com templates React customizados.
 
-**Templates disponíveis**:
-- Confirmação de cadastro (signup)
-- Convite (invite)
-- Link mágico (magic-link)
-- Recuperação de senha (recovery)
-- Mudança de e-mail (email-change)
-- Reautenticação (reauthentication)
+**Estado**: o envio transacional de Auth deve usar **e-mail nativo do Supabase** (templates no Dashboard e, se necessário, **SMTP personalizado** no projeto). Desative o **Send Email Hook** que apontava para esta função. Instruções: **`docs/supabase-auth-email.md`**.
+
+O código e os templates React em `_shared/email-templates/` permanecem no repo só como referência.
 
 ---
 
@@ -695,7 +690,7 @@ A tabela `meta_tags` permite configurar title, description e OG tags por página
 
 | Nome | Descrição |
 |---|---|
-| `LOVABLE_API_KEY` | Chave da API Lovable |
+| `LOVABLE_API_KEY` | *(Legado)* Só era usada pela Edge `auth-email-hook` com Lovable; **não necessária** se o Auth enviar e-mail pelo Supabase (ver `docs/supabase-auth-email.md`). |
 | `RAPIDAPI_KEY` | Chave para JSearch API (importação de vagas) |
 | `SUPABASE_URL` | URL do projeto Supabase |
 | `SUPABASE_ANON_KEY` | Chave anônima |
@@ -740,7 +735,7 @@ O BahiaVagas possui um sistema de analytics próprio, independente do Google Ana
 | **JSearch API (RapidAPI)** | Importação automática de vagas de emprego |
 | **Google Analytics (G-WR7P9Y062M)** | Analytics externo |
 | **Cloudflare** | Headers de geolocalização para analytics |
-| **Lovable Cloud (Supabase)** | Backend completo (DB, Auth, Storage, Edge Functions) |
+| **Supabase** | PostgreSQL, Auth (e-mail via painel/SMTP), Storage, Edge Functions opcionais |
 
 ---
 

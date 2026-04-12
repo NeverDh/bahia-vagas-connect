@@ -33,8 +33,12 @@ export type ProfileApplicationRow = {
   } | null;
 };
 
-export async function fetchCandidateProfile(): Promise<CandidateProfileMe | null> {
-  return api.get<CandidateProfileMe | null>("/api/candidates/me");
+export async function fetchCandidateProfile(options?: {
+  skipSessionInvalidOn401?: boolean;
+}): Promise<CandidateProfileMe | null> {
+  return api.get<CandidateProfileMe | null>("/api/candidates/me", {
+    skipSessionInvalidOn401: options?.skipSessionInvalidOn401,
+  });
 }
 
 export async function patchCandidateProfile(body: {
