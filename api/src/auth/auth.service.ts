@@ -131,11 +131,12 @@ export class AuthService {
 
   async login(dto: LoginDto): Promise<AuthPayload> {
     const client = this.supabaseService.getAdminClient();
+    console.log(client)
     const { data, error } = await client.auth.signInWithPassword({
       email: dto.email,
       password: dto.password,
     });
-
+    console.log(error)
     if (error) {
       this.logger.warn(`login failed: ${error.message}`);
       this.throwMappedAuthError(error.message);

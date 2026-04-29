@@ -23,7 +23,6 @@ dist-ssr
 *.sln
 *.sw?
 .agent/
-.env*
 api/.env
 api/node_modules
 api/dist
