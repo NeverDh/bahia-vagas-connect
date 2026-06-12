@@ -2,310 +2,303 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-interface JSearchJob {
-  job_id: string;
-  job_title: string;
-  employer_name: string;
-  employer_logo: string | null;
-  job_description: string;
-  job_city: string;
-  job_state: string;
-  job_employment_type: string;
-  job_min_salary: number | null;
-  job_max_salary: number | null;
-  job_required_experience?: {
-    required_experience_in_months?: number;
+interface AdzunaJob {
+  id: string;
+  title: string;
+  description?: string;
+  created?: string;
+  redirect_url?: string;
+  salary_min?: number | null;
+  salary_max?: number | null;
+  contract_type?: string;
+  contract_time?: string;
+  location?: {
+    display_name?: string;
+    area?: string[];
   };
-  job_is_remote: boolean;
-  job_posted_at_datetime_utc: string;
-  job_apply_link?: string;
+  company?: {
+    display_name?: string;
+  };
 }
 
-function mapContractType(employmentType: string): string {
-  const typeMap: Record<string, string> = {
-    'FULLTIME': 'clt',
-    'PARTTIME': 'pj',
-    'CONTRACTOR': 'pj',
-    'TEMPORARY': 'temporary',
-    'INTERN': 'intern',
-    'FREELANCE': 'freelance',
-  };
-  return typeMap[employmentType?.toUpperCase()] || 'clt';
+interface AdzunaResponse {
+  count?: number;
+  results?: AdzunaJob[];
 }
 
-function mapExperienceLevel(experienceMonths: number | undefined): string {
-  if (!experienceMonths || experienceMonths < 6) return 'intern';
-  if (experienceMonths < 24) return 'junior';
-  if (experienceMonths < 48) return 'mid';
-  if (experienceMonths < 84) return 'senior';
-  return 'specialist';
+function isBahiaJob(job: AdzunaJob): boolean {
+  const area = job.location?.area ?? [];
+  return area.some((part) => (part || "").toLowerCase() === "bahia");
+}
+
+function mapContractType(job: AdzunaJob): string {
+  const title = (job.title || "").toLowerCase();
+  const desc = (job.description || "").toLowerCase();
+  const text = `${title} ${desc}`;
+
+  if (/est[áa]gi/.test(text) || /\bintern/.test(text)) return "intern";
+  if (/freelanc/.test(text)) return "freelance";
+
+  switch ((job.contract_type || "").toLowerCase()) {
+    case "permanent":
+      return "clt";
+    case "contract":
+      return "pj";
+    case "temporary":
+      return "temporary";
+    default:
+      return "clt";
+  }
+}
+
+function mapExperienceLevel(title: string): string {
+  const t = title.toLowerCase();
+  if (/est[áa]gi|trainee|aprendiz/.test(t)) return "intern";
+  if (/\bj[úu]nior|\bjr\b|\bi\b/.test(t)) return "junior";
+  if (/\bs[êe]nior|\bsr\b|\biii\b/.test(t)) return "senior";
+  if (/especialista|specialist|principal|lead|coordenador|gerente|manager/.test(t)) return "specialist";
+  if (/\bpleno|\bpl\b|\bii\b|mid/.test(t)) return "mid";
+  return "mid";
+}
+
+function isRemote(job: AdzunaJob): boolean {
+  const text = `${job.title || ""} ${job.description || ""}`.toLowerCase();
+  return /remoto|remote|home\s*office|tele\s*trabalho/.test(text);
 }
 
 function extractCategory(title: string): string {
   const categories: Record<string, string[]> = {
-    'Tecnologia': ['desenvolvedor', 'developer', 'programador', 'software', 'tech', 'ti', 'dados', 'data', 'analista de sistemas', 'devops', 'frontend', 'backend', 'fullstack'],
-    'Vendas': ['vendedor', 'vendas', 'sales', 'comercial', 'representante'],
-    'Marketing': ['marketing', 'social media', 'publicidade', 'designer', 'criativo'],
-    'Administração': ['administrativo', 'administração', 'secretária', 'recepcionista', 'assistente'],
-    'Recursos Humanos': ['rh', 'recursos humanos', 'recrutador', 'seleção'],
-    'Financeiro': ['financeiro', 'contábil', 'contador', 'fiscal', 'tesouraria'],
-    'Saúde': ['enfermeiro', 'médico', 'farmacêutico', 'técnico de enfermagem', 'saúde'],
-    'Logística': ['logística', 'motorista', 'entregador', 'estoquista', 'almoxarife'],
-    'Construção': ['engenheiro', 'arquiteto', 'construção', 'obra', 'pedreiro'],
-    'Atendimento': ['atendimento', 'suporte', 'telemarketing', 'call center', 'sac'],
+    Tecnologia: ["desenvolvedor", "developer", "programador", "software", "tech", " ti ", "dados", "data", "analista de sistemas", "devops", "frontend", "backend", "fullstack", "qa"],
+    Vendas: ["vendedor", "vendas", "sales", "comercial", "representante"],
+    Marketing: ["marketing", "social media", "publicidade", "designer", "criativo"],
+    "Administração": ["administrativo", "administração", "secretária", "recepcionista", "assistente"],
+    "Recursos Humanos": ["rh ", "recursos humanos", "recrutador", "seleção"],
+    Financeiro: ["financeiro", "contábil", "contador", "fiscal", "tesouraria"],
+    "Saúde": ["enfermeiro", "médico", "farmacêutico", "técnico de enfermagem", "saúde"],
+    "Logística": ["logística", "motorista", "entregador", "estoquista", "almoxarife"],
+    "Construção": ["engenheiro", "arquiteto", "construção", "obra", "pedreiro"],
+    Atendimento: ["atendimento", "suporte", "telemarketing", "call center", "sac"],
   };
 
-  const lowerTitle = title.toLowerCase();
+  const lower = ` ${title.toLowerCase()} `;
   for (const [category, keywords] of Object.entries(categories)) {
-    if (keywords.some(keyword => lowerTitle.includes(keyword))) {
-      return category;
-    }
+    if (keywords.some((k) => lower.includes(k))) return category;
   }
-  return 'Outros';
+  return "Outros";
 }
 
-// All municipalities/cities of Bahia
-const bahiaCities = [
-  'Salvador', 'Feira de Santana', 'Vitória da Conquista', 'Camaçari', 'Itabuna',
-  'Juazeiro', 'Lauro de Freitas', 'Ilhéus', 'Jequié', 'Teixeira de Freitas',
-  'Alagoinhas', 'Barreiras', 'Porto Seguro', 'Simões Filho', 'Paulo Afonso',
-  'Eunápolis', 'Santo Antônio de Jesus', 'Valença', 'Candeias', 'Guanambi',
-  'Jacobina', 'Serrinha', 'Senhor do Bonfim', 'Dias d\'Ávila', 'Campo Formoso',
-  'Luís Eduardo Magalhães', 'Cruz das Almas', 'Brumado', 'Irecê', 'Itapetinga',
-  'Conceição do Coité', 'Mucuri', 'Santo Amaro', 'Itamaraju', 'Ribeira do Pombal',
-  'Bom Jesus da Lapa', 'Casa Nova', 'Madre de Deus', 'Catu', 'Tucano',
-  'Euclides da Cunha', 'Ipiaú', 'Itaberaba', 'Mata de São João', 'Cachoeira',
-  'São Sebastião do Passé', 'Conceição do Jacuípe', 'Entre Rios', 'Vera Cruz',
-  'Amélia Rodrigues'
-];
-
 serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders });
   }
 
   try {
-    const RAPIDAPI_KEY = Deno.env.get('RAPIDAPI_KEY');
-    if (!RAPIDAPI_KEY) {
-      throw new Error('RAPIDAPI_KEY não configurada');
-    }
+    const ADZUNA_APP_ID = Deno.env.get("ADZUNA_APP_ID");
+    const ADZUNA_APP_KEY = Deno.env.get("ADZUNA_APP_KEY");
+    const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
+    const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    const MAX_DAYS_OLD = Deno.env.get("ADZUNA_MAX_DAYS_OLD") || "30";
 
-    const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
-    const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-    
+    if (!ADZUNA_APP_ID || !ADZUNA_APP_KEY) {
+      throw new Error("ADZUNA_APP_ID/ADZUNA_APP_KEY não configurados");
+    }
     if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
-      throw new Error('Variáveis do Supabase não configuradas');
+      throw new Error("Variáveis do Supabase não configuradas");
     }
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    // Pick a random city for this execution to spread across all cities over time
-    const cityIndex = Math.floor(Math.random() * bahiaCities.length);
-    const city = bahiaCities[cityIndex];
+    const params = new URLSearchParams({
+      app_id: ADZUNA_APP_ID,
+      app_key: ADZUNA_APP_KEY,
+      what: "vagas",
+      where: "Bahia",
+      results_per_page: "50",
+      max_days_old: MAX_DAYS_OLD,
+      sort_by: "date",
+    });
 
-    console.log(`Buscando vagas em: ${city}, Bahia`);
+    const url = `https://api.adzuna.com/v1/api/jobs/br/search/1?${params.toString()}`;
+    console.log("Buscando vagas na Adzuna (where=Bahia, 50 mais recentes)");
 
-    const allJobs: JSearchJob[] = [];
+    const response = await fetch(url, { headers: { Accept: "application/json" } });
 
-    try {
-      const searchUrl = `https://jsearch.p.rapidapi.com/search?query=${encodeURIComponent('vagas ' + city + ' Bahia Brasil')}&page=1&num_pages=3&country=br`;
-      
-      const response = await fetch(searchUrl, {
-        method: 'GET',
-        headers: {
-          'X-RapidAPI-Key': RAPIDAPI_KEY,
-          'X-RapidAPI-Host': 'jsearch.p.rapidapi.com',
-        },
-      });
+    if (!response.ok) {
+      const status = response.status;
+      console.error(`Adzuna respondeu ${status}: ${response.statusText}`);
 
-      if (!response.ok) {
-        const statusCode = response.status;
-        const statusText = response.statusText;
-        console.error(`Erro na API JSearch: ${statusCode} - ${statusText}`);
-        
-        // Check for quota exceeded (429 or 403)
-        if (statusCode === 429 || statusCode === 403) {
-          return new Response(
-            JSON.stringify({ 
-              success: false, 
-              error: 'QUOTA_EXCEEDED',
-              message: 'Limite de buscas da API atingido. Aguarde até o próximo ciclo de renovação do plano (mensal).'
-            }),
-            { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-          );
-        }
-        
-        throw new Error(`API retornou status ${statusCode}`);
+      if (status === 429 || status === 403) {
+        return new Response(
+          JSON.stringify({
+            success: false,
+            error: "QUOTA_EXCEEDED",
+            message: "Limite de buscas da Adzuna atingido. Aguarde a renovação do plano mensal.",
+          }),
+          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
       }
 
-      const data = await response.json();
-      
-      if (data.data && Array.isArray(data.data)) {
-        // Filter to ensure jobs are in Bahia
-        const bahiaJobs = data.data.filter((job: JSearchJob) => {
-          const state = job.job_state?.toLowerCase() || '';
-          const jobCity = job.job_city?.toLowerCase() || '';
-          return state.includes('bahia') || state === 'ba' || 
-                 bahiaCities.some(c => jobCity.includes(c.toLowerCase()));
-        });
-        
-        allJobs.push(...bahiaJobs);
+      if (status === 401) {
+        throw new Error("Credenciais Adzuna inválidas (401)");
       }
-    } catch (error) {
-      console.error(`Erro ao buscar vagas em ${city}:`, error);
-      throw error;
+
+      throw new Error(`Adzuna retornou status ${status}`);
     }
 
-    console.log(`Total de vagas encontradas: ${allJobs.length}`);
+    const data = (await response.json()) as AdzunaResponse;
+    const allResults = data.results ?? [];
+    const bahiaJobs = allResults.filter(isBahiaJob);
 
-    // Remove duplicates by job_id
-    const uniqueJobs = allJobs.reduce((acc: JSearchJob[], job: JSearchJob) => {
-      if (!acc.find(j => j.job_id === job.job_id)) {
-        acc.push(job);
-      }
-      return acc;
-    }, []);
+    console.log(`Adzuna retornou ${allResults.length} vagas, ${bahiaJobs.length} são da Bahia`);
 
-    // Get or create a default company for imported jobs
+    // Empresa padrão
     let { data: defaultCompany } = await supabase
-      .from('companies')
-      .select('id')
-      .eq('name', 'Vagas Importadas')
+      .from("companies")
+      .select("id")
+      .eq("name", "Vagas Importadas")
       .maybeSingle();
 
     if (!defaultCompany) {
       const { data: newCompany, error: companyError } = await supabase
-        .from('companies')
+        .from("companies")
         .insert({
-          name: 'Vagas Importadas',
-          description: 'Vagas importadas automaticamente de APIs externas',
-          location: 'Bahia, Brasil',
+          name: "Vagas Importadas",
+          description: "Vagas importadas automaticamente de APIs externas",
+          location: "Bahia, Brasil",
           is_verified: false,
         })
-        .select('id')
+        .select("id")
         .single();
 
       if (companyError) {
-        console.error('Erro ao criar empresa padrão:', companyError);
-        throw new Error('Falha ao criar empresa padrão para vagas importadas');
+        throw new Error(`Falha ao criar empresa padrão: ${companyError.message}`);
       }
       defaultCompany = newCompany;
     }
 
-    // Transform ALL jobs (no limit)
-    const jobsToInsert = uniqueJobs.map((job: JSearchJob) => ({
-      title: job.job_title,
-      description: job.job_description || 'Descrição não disponível',
-      location: `${job.job_city || city}, ${job.job_state || 'Bahia'}`,
-      company_id: defaultCompany.id,
-      contract_type: mapContractType(job.job_employment_type),
-      experience_level: mapExperienceLevel(job.job_required_experience?.required_experience_in_months),
-      remote_option: job.job_is_remote || false,
-      category: extractCategory(job.job_title),
-      salary_min: job.job_min_salary || null,
-      salary_max: job.job_max_salary || null,
-      status: 'active',
-      external_url: job.job_apply_link || null,
-    }));
+    const jobsToInsert = bahiaJobs.map((job) => {
+      const location = job.location?.display_name || "Bahia, Brasil";
+      const companyName = job.company?.display_name || "Empresa não informada";
+      const description =
+        job.description && job.description.trim().length > 0
+          ? job.description
+          : `Vaga publicada por ${companyName}.`;
+
+      return {
+        title: job.title,
+        description,
+        location,
+        company_id: defaultCompany!.id,
+        contract_type: mapContractType(job),
+        experience_level: mapExperienceLevel(job.title || ""),
+        remote_option: isRemote(job),
+        category: extractCategory(job.title || ""),
+        salary_min: job.salary_min ?? null,
+        salary_max: job.salary_max ?? null,
+        status: "active",
+        external_url: job.redirect_url ?? null,
+      };
+    });
 
     if (jobsToInsert.length === 0) {
       return new Response(
-        JSON.stringify({ 
-          success: true, 
-          message: `Nenhuma vaga encontrada em ${city}`,
+        JSON.stringify({
+          success: true,
+          message: "Nenhuma vaga da Bahia encontrada nas 50 mais recentes",
           imported: 0,
-          city_searched: city,
+          skipped: 0,
+          total_found: allResults.length,
+          region_searched: "Bahia",
+          api_requests: 1,
         }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
 
-    // Get existing jobs by external_url to avoid duplicates
-    const externalUrls: string[] = jobsToInsert
-      .map((j: { external_url: string | null }) => j.external_url)
-      .filter((url: string | null): url is string => url !== null);
+    // Deduplicação por external_url
+    const externalUrls = jobsToInsert
+      .map((j) => j.external_url)
+      .filter((u): u is string => !!u);
 
-    let existingUrls: Set<string> = new Set();
-    
+    const existingUrls = new Set<string>();
     if (externalUrls.length > 0) {
-      const { data: existingJobs } = await supabase
-        .from('jobs')
-        .select('external_url')
-        .in('external_url', externalUrls);
-      
-      if (existingJobs) {
-        existingUrls = new Set(
-          existingJobs
-            .map((j: { external_url: string | null }) => j.external_url)
-            .filter((url: string | null): url is string => url !== null)
-        );
+      const { data: existing } = await supabase
+        .from("jobs")
+        .select("external_url")
+        .in("external_url", externalUrls);
+      for (const row of existing || []) {
+        if (row.external_url) existingUrls.add(row.external_url);
       }
     }
 
-    // Also check by title + location
-    const { data: existingByTitle } = await supabase
-      .from('jobs')
-      .select('title, location');
+    // Deduplicação por title + location (apenas vagas ativas recentes)
+    const { data: existingTitles } = await supabase
+      .from("jobs")
+      .select("title, location")
+      .eq("status", "active");
 
     const existingTitleLocations = new Set(
-      (existingByTitle || []).map((j: { title: string; location: string }) => `${j.title}|${j.location}`)
+      (existingTitles || []).map((j: { title: string; location: string }) => `${j.title}|${j.location}`),
     );
 
-    const newJobs = jobsToInsert.filter((job: { external_url: string | null; title: string; location: string }) => {
+    const newJobs = jobsToInsert.filter((job) => {
       if (job.external_url && existingUrls.has(job.external_url)) return false;
       if (existingTitleLocations.has(`${job.title}|${job.location}`)) return false;
       return true;
     });
 
-    const skippedCount = jobsToInsert.length - newJobs.length;
+    const skipped = jobsToInsert.length - newJobs.length;
 
     if (newJobs.length === 0) {
       return new Response(
-        JSON.stringify({ 
-          success: true, 
-          message: `Nenhuma vaga nova em ${city} (${skippedCount} já existiam)`,
+        JSON.stringify({
+          success: true,
+          message: `Nenhuma vaga nova na Bahia (${skipped} já existiam)`,
           imported: 0,
-          skipped: skippedCount,
-          city_searched: city,
+          skipped,
+          total_found: jobsToInsert.length,
+          region_searched: "Bahia",
+          api_requests: 1,
         }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
 
-    const { data: insertedJobs, error: insertError } = await supabase
-      .from('jobs')
+    const { data: inserted, error: insertError } = await supabase
+      .from("jobs")
       .insert(newJobs)
-      .select('id');
+      .select("id");
 
     if (insertError) {
-      console.error('Erro ao inserir vagas:', insertError);
       throw new Error(`Falha ao inserir vagas: ${insertError.message}`);
     }
 
-    console.log(`Vagas inseridas com sucesso: ${insertedJobs?.length || 0}`);
+    const importedCount = inserted?.length ?? 0;
+    console.log(`Importadas ${importedCount} vagas novas (${skipped} ignoradas)`);
 
     return new Response(
-      JSON.stringify({ 
-        success: true, 
-        message: `${insertedJobs?.length || 0} vagas importadas de ${city}${skippedCount > 0 ? ` (${skippedCount} ignoradas)` : ''}`,
-        imported: insertedJobs?.length || 0,
-        skipped: skippedCount,
-        total_found: uniqueJobs.length,
-        city_searched: city,
+      JSON.stringify({
+        success: true,
+        message: `${importedCount} vagas novas importadas da Bahia (das ${jobsToInsert.length} mais recentes, ${skipped} já existiam)`,
+        imported: importedCount,
+        skipped,
+        total_found: jobsToInsert.length,
+        region_searched: "Bahia",
+        city_searched: "Bahia",
+        api_requests: 1,
       }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
-
   } catch (error: unknown) {
-    console.error('Erro na importação:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+    console.error("Erro na importação Adzuna:", error);
+    const message = error instanceof Error ? error.message : "Erro desconhecido";
     return new Response(
-      JSON.stringify({ success: false, error: errorMessage }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      JSON.stringify({ success: false, error: message }),
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   }
 });
