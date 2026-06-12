@@ -8,6 +8,7 @@ import { CandidateProfile } from '../entities/candidate-profile.entity.js';
 import { JobsController } from './jobs.controller.js';
 import { JobsService } from './jobs.service.js';
 import { JsearchImportService } from './jsearch-import.service.js';
+import { AdzunaImportService } from './adzuna-import.service.js';
 
 @Module({
   imports: [
@@ -15,7 +16,7 @@ import { JsearchImportService } from './jsearch-import.service.js';
     AuthModule,
   ],
   controllers: [JobsController],
-  providers: [JobsService, JsearchImportService],
-  exports: [JobsService, JsearchImportService],
+  providers: [JobsService, JsearchImportService, AdzunaImportService],
+  exports: [JobsService, JsearchImportService, AdzunaImportService],
 })
 export class JobsModule {}

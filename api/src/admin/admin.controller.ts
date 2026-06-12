@@ -19,7 +19,7 @@ import {
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
 import { AdminGuard } from '../auth/guards/admin.guard.js';
 import { JobsService } from '../jobs/jobs.service.js';
-import { JsearchImportService } from '../jobs/jsearch-import.service.js';
+import { AdzunaImportService } from '../jobs/adzuna-import.service.js';
 import { AnalyticsService } from '../analytics/analytics.service.js';
 import { AdminAnalyticsQueryDto } from '../analytics/dto/admin-analytics-query.dto.js';
 import { AdminService } from './admin.service.js';
@@ -33,7 +33,7 @@ export class AdminController {
   constructor(
     private readonly adminService: AdminService,
     private readonly jobsService: JobsService,
-    private readonly jsearchImport: JsearchImportService,
+    private readonly adzunaImport: AdzunaImportService,
     private readonly analyticsService: AnalyticsService,
   ) {}
 
@@ -94,11 +94,11 @@ export class AdminController {
 
   @Post('jobs/import')
   @ApiOperation({
-    summary: 'Importar vagas via JSearch (RapidAPI; RAPIDAPI_KEY no servidor)',
+    summary: 'Importar vagas via Adzuna (ADZUNA_APP_ID / ADZUNA_APP_KEY no servidor)',
   })
   @ApiResponse({ status: 200 })
-  importJobsJsearch() {
-    return this.jsearchImport.importFromJSearch();
+  importJobsAdzuna() {
+    return this.adzunaImport.importFromAdzuna();
   }
 
   @Delete('jobs/:id')

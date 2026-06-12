@@ -13,6 +13,7 @@
  */
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ScheduleModule } from '@nestjs/schedule';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { SupabaseModule } from './config/supabase.module.js';
@@ -27,6 +28,7 @@ import { ApplicationsModule } from './applications/applications.module.js';
 import { BlogModule } from './blog/blog.module.js';
 import { MetaTagsModule } from './meta-tags/meta-tags.module.js';
 import { AnalyticsModule } from './analytics/analytics.module.js';
+import { CronModule } from './cron/cron.module.js';
 
 // Entities
 import {
@@ -49,6 +51,8 @@ import {
       isGlobal: true,
       envFilePath: '.env',
     }),
+
+    ScheduleModule.forRoot(),
 
     // ── TypeORM — Conexão ao PostgreSQL ──────────────────────
     // Conecta ao PostgreSQL do Supabase via DATABASE_URL.
@@ -105,6 +109,7 @@ import {
     BlogModule,
     MetaTagsModule,
     AnalyticsModule,
+    CronModule,
   ],
   controllers: [HealthController],
   providers: [],
